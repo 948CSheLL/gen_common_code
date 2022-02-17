@@ -51,6 +51,7 @@ function! s:GenerateAlgorithm()
   if empty(s:algorithm)
     call s:FindAlgorithm()
     if empty(s:algorithm)
+      call s:DeleteVariable()
       redraw!
       return
     endif
