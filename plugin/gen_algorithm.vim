@@ -16,10 +16,18 @@ function! s:InitVariable()
 endfunction
 
 function! s:DeleteVariable()
-  unlet s:algorithm_file
-  unlet s:algorithm
-  unlet s:index
-  unlet s:cur_pos
+  if exists("s:algorithm_file")
+    unlet s:algorithm_file
+  endif
+  if exists("s:algorithm")
+    unlet s:algorithm
+  endif
+  if exists("s:index")
+    unlet s:index
+  endif
+  if exists("s:cur_pos")
+    unlet s:cur_pos
+  endif
 
   inoremap <F5> <C-[>
   inoremap <F6> <C-[>
