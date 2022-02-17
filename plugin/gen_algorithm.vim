@@ -62,21 +62,27 @@ function! s:GenerateAlgorithm()
       return
     endif
   endif
-  let save_reg_a = getreginfo('a')
-  let @a = s:algorithm[s:index]
-  execute 'normal "ap'
-  let curpos = getpos('.')
-  let lnum = curpos[1]
-  let col = curpos[2]
-  if !empty(s:cur_pos) && s:index < len(s:cur_pos)
-    let lnum = s:cur_pos[s:index][0]
-    let col = s:cur_pos[s:index][1]
-    call cursor(lnum, col)
-  else
-    call add(s:cur_pos, [lnum, col])
-  endif
+  let first = 1
+  while first || s:algorithm[s:index] =~# '\s'
+    if first
+      let first = 0
+    endif
+    let save_reg_a = getreginfo('a')
+    let @a = s:algorithm[s:index]
+    execute 'normal "ap'
+    let curpos = getpos('.')
+    let lnum = curpos[1]
+    let col = curpos[2]
+    if !empty(s:cur_pos) && s:index < len(s:cur_pos)
+      let lnum = s:cur_pos[s:index][0]
+      let col = s:cur_pos[s:index][1]
+      call cursor(lnum, col)
+    else
+      call add(s:cur_pos, [lnum, col])
+    endif
+    let s:index = s:index + 1
+  endwhile
   call setreg('a', save_reg_a)
-  let s:index = s:index + 1
   if s:index >= len(s:algorithm)
     call s:DeleteVariable()
   endif 
