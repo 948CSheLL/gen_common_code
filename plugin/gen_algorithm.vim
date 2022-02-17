@@ -63,7 +63,7 @@ function! s:GenerateAlgorithm()
     endif
   endif
   let first = 1
-  while first || s:algorithm[s:index] =~# '\s'
+  while first || s:algorithm[s:index] =~# '[ \|\t]'
     if first
       let first = 0
     endif
@@ -81,11 +81,12 @@ function! s:GenerateAlgorithm()
       call add(s:cur_pos, [lnum, col])
     endif
     let s:index = s:index + 1
+    if s:index >= len(s:algorithm)
+      call s:DeleteVariable()
+      break
+    endif 
   endwhile
   call setreg('a', save_reg_a)
-  if s:index >= len(s:algorithm)
-    call s:DeleteVariable()
-  endif 
   redraw!
 endfunction
 
