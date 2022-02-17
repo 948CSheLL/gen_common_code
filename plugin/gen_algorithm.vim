@@ -34,8 +34,8 @@ function! s:FindFile()
   let user_input = inputsecret("")
   let algorithm_name = join(split(substitute(user_input, '\A', ' ', 'g'), ' '), '')
   if !empty(algorithm_name)
-    let s:algorithm_file = fnamemodify(glob(s:third_part_path . '/algorithm_code/*' . algorithm_name . '*/' . &filetype . '/*.' . s:filetype_suffix[&filetype]), ":p")
     call s:InitVariable()
+    let s:algorithm_file = fnamemodify(glob(s:third_part_path . '/algorithm_code/*' . algorithm_name . '*/' . &filetype . '/*.' . s:filetype_suffix[&filetype]), ":p")
   endif
 endfunction
 
