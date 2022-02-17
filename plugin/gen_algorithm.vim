@@ -63,7 +63,7 @@ function! s:GenerateAlgorithm()
     endif
   endif
   let first = 1
-  while first || s:algorithm[s:index] =~# '[ \|\t]'
+  while first || (s:algorithm[s:index] =~# '[ \|\t]' && s:algorithm[s:index - 1] =~# '[ \|\t]')
     if first
       let first = 0
     endif
