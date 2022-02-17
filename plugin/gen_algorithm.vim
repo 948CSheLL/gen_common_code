@@ -20,11 +20,11 @@ function! s:DeleteVariable()
   unlet s:algorithm
   unlet s:index
   unlet s:cur_pos
-  iunmap <F5>
-  iunmap <F6>
 
-  iunmap <F7>
-  iunmap <F8>
+  inoremap <F5> <C-[>
+  inoremap <F6> <C-[>
+  inoremap <F7> <C-[>
+  inoremap <F8> <C-[>
 endfunction
 
 function! s:FindFile()
@@ -113,7 +113,13 @@ augroup gen_algorithm
   autocmd FileType c,cpp,python,java 
 	\ imap <leader>a <C-o><Plug>gen_algorithmGenerate
   autocmd FileType c,cpp,python,java 
-	\ imap <C-;> <C-o><Plug>gen_algorithmFindFile
+	\ imap <F4> <C-o><Plug>gen_algorithmFindFile
+  autocmd FileType c,cpp,python,java 
+	\ inoremap <F5> <C-[>
+  autocmd FileType c,cpp,python,java 
+	\ inoremap <F6> <C-[>
+  autocmd FileType c,cpp,python,java 
+	\ inoremap <F7> <C-[>
+  autocmd FileType c,cpp,python,java 
+	\ inoremap <F8> <C-[>
 augroup END
-
-
