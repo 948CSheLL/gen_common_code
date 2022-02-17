@@ -113,7 +113,7 @@ augroup gen_algorithm
   autocmd FileType *.c,*.cpp,*.py,*.java 
 	\ imap <leader>a <C-o><Plug>gen_algorithmGenerate
   autocmd FileType *.c,*.cpp,*.py,*.java 
-	\ imap <C-j> <C-o><Plug>gen_algorithmFindFile
+	\ imap <C-;> <C-o><Plug>gen_algorithmFindFile
 augroup END
 
 
