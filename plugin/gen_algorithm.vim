@@ -72,13 +72,12 @@ function! s:GenerateAlgorithm()
     execute 'normal "ap'
     let curpos = getpos('.')
     let lnum = curpos[1]
-    let col = curpos[2]
+    let column = curpos[2]
     if !empty(s:cur_pos) && s:index < len(s:cur_pos)
-      let lnum = s:cur_pos[s:index][0]
-      let col = s:cur_pos[s:index][1]
-      call cursor(lnum, col)
+      let s:cur_pos[s:index][0] = lnum
+      let s:cur_pos[s:index][1] = column
     else
-      call add(s:cur_pos, [lnum, col])
+      call add(s:cur_pos, [lnum, column])
     endif
     let s:index = s:index + 1
     if s:index >= len(s:algorithm)
@@ -94,8 +93,8 @@ function! s:RemoveAlgorithm()
   if !empty(s:algorithm)
     let s:index = max([s:index - 1, 0])
     let lnum = s:cur_pos[s:index][0]
-    let col = s:cur_pos[s:index][1]
-    call cursor(lnum, col)
+    let column = s:cur_pos[s:index][1]
+    call cursor(lnum, column)
     execute 'normal x'
   endif
 endfunction
