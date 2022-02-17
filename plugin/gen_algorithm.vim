@@ -8,6 +8,11 @@ function! s:InitVariable()
   let s:algorithm = ''
   let s:index = 0
   let s:cur_pos = []
+  imap <F5> <C-o><Plug>gen_algorithmGenerate
+  imap <F6> <C-o><Plug>gen_algorithmGenerate
+
+  imap <F7> <C-o><Plug>gen_algorithmRemove
+  imap <F8> <C-o><Plug>gen_algorithmRemove
 endfunction
 
 function! s:DeleteVariable()
@@ -15,6 +20,11 @@ function! s:DeleteVariable()
   unlet s:algorithm
   unlet s:index
   unlet s:cur_pos
+
+  inoremap <F5> <C-[>
+  inoremap <F6> <C-[>
+  inoremap <F7> <C-[>
+  inoremap <F8> <C-[>
 endfunction
 
 function! s:FindFile()
@@ -22,13 +32,11 @@ function! s:FindFile()
     return
   endif
   call s:InitVariable()
-  let save_reg_z = getreginfo('z')
-  execute 'normal "zyy'
-  let algorithm_name = join(split(substitute(@z, '\A', ' ', 'g'), ' '), '')
+  let user_input = inputsecret("")
+  let algorithm_name = join(split(substitute(user_input, '\A', ' ', 'g'), ' '), '')
   if !empty(algorithm_name)
     let s:algorithm_file = fnamemodify(glob(s:third_part_path . '/algorithm_code/*' . algorithm_name . '*/' . &filetype . '/*.' . s:filetype_suffix[&filetype]), ":p")
   endif
-  call setreg('z', save_reg_z)
 endfunction
 
 function! s:FindAlgorithm()
@@ -96,16 +104,22 @@ let s:filetype_suffix = {
 
 augroup gen_algorithm
   autocmd!
-  autocmd InsertLeave *.c,*.cpp,*.py,*.java 
-	\ call s:FindFile()
+  autocmd FileType c,cpp,python,java 
+	\ noremap <silent> <Plug>gen_algorithmGenerate :<C-u>call <SID>GenerateAlgorithm()<CR>
+  autocmd FileType c,cpp,python,java 
+	\ noremap <silent> <Plug>gen_algorithmRemove :<C-u>call <SID>RemoveAlgorithm()<CR>
+  autocmd FileType c,cpp,python,java 
+	\ noremap <silent> <Plug>gen_algorithmFindFile :<C-u>call <SID>FindFile()<CR>
+  autocmd FileType c,cpp,python,java 
+	\ imap <leader>a <C-o><Plug>gen_algorithmGenerate
+  autocmd FileType c,cpp,python,java 
+	\ imap <F4> <C-o><Plug>gen_algorithmFindFile
+  autocmd FileType c,cpp,python,java 
+	\ inoremap <F5> <C-[>
+  autocmd FileType c,cpp,python,java 
+	\ inoremap <F6> <C-[>
+  autocmd FileType c,cpp,python,java 
+	\ inoremap <F7> <C-[>
+  autocmd FileType c,cpp,python,java 
+	\ inoremap <F8> <C-[>
 augroup END
-
-noremap <silent> <Plug>gen_algorithmGenerate :<C-u>call <SID>GenerateAlgorithm()<CR>
-noremap <silent> <Plug>gen_algorithmRemove :<C-u>call <SID>RemoveAlgorithm()<CR>
-
-imap <F5> <C-o><Plug>gen_algorithmGenerate
-imap <F6> <C-o><Plug>gen_algorithmGenerate
-imap <leader>a <C-o><Plug>gen_algorithmGenerate
-
-imap <F7> <C-o><Plug>gen_algorithmRemove
-imap <F8> <C-o><Plug>gen_algorithmRemove
