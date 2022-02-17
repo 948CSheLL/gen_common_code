@@ -104,15 +104,15 @@ let s:filetype_suffix = {
 
 augroup gen_algorithm
   autocmd!
-  autocmd FileType *.c,*.cpp,*.py,*.java 
+  autocmd FileType c,cpp,python,java 
 	\ noremap <silent> <Plug>gen_algorithmGenerate :<C-u>call <SID>GenerateAlgorithm()<CR>
-  autocmd FileType *.c,*.cpp,*.py,*.java 
+  autocmd FileType c,cpp,python,java 
 	\ noremap <silent> <Plug>gen_algorithmRemove :<C-u>call <SID>RemoveAlgorithm()<CR>
-  autocmd FileType *.c,*.cpp,*.py,*.java 
+  autocmd FileType c,cpp,python,java 
 	\ noremap <silent> <Plug>gen_algorithmFindFile :<C-u>call <SID>FindFile()<CR>
-  autocmd FileType *.c,*.cpp,*.py,*.java 
+  autocmd FileType c,cpp,python,java 
 	\ imap <leader>a <C-o><Plug>gen_algorithmGenerate
-  autocmd FileType *.c,*.cpp,*.py,*.java 
+  autocmd FileType c,cpp,python,java 
 	\ imap <C-;> <C-o><Plug>gen_algorithmFindFile
 augroup END
 
