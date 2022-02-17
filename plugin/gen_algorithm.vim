@@ -28,9 +28,7 @@ function! s:DeleteVariable()
 endfunction
 
 function! s:FindFile()
-  if exists('s:algorithm_file') && !empty(s:algorithm_file)
-    return
-  endif
+  call s:DeleteVariable()
   let user_input = inputsecret("")
   let algorithm_name = join(split(substitute(user_input, '\A', ' ', 'g'), ' '), '')
   if !empty(algorithm_name)
