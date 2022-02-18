@@ -135,11 +135,7 @@ augroup gen_algorithm
   autocmd FileType c,cpp,python,java 
 	\ noremap <silent> <Plug>gen_algorithmFindFile :<C-u>call <SID>FindFile()<CR>
   autocmd FileType c,cpp,python,java 
-	\ noremap <silent> <Plug>gen_algorithmRelease :<C-u>call <SID>ReleaseCapsAndBs()<CR>
-  autocmd FileType c,cpp,python,java 
 	\ imap <leader>a <C-o><Plug>gen_algorithmGenerate
   autocmd FileType c,cpp,python,java 
 	\ nmap <silent> <F4> <Plug>gen_algorithmFindFile
-  autocmd FileType c,cpp,python,java 
-	\ nmap <silent> <F5> <Plug>gen_algorithmRelease
 augroup END
