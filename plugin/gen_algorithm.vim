@@ -5,32 +5,9 @@ let g:loaded_algorithm = 1
 
 function! s:ReleaseCapsAndBs() 
   try
-    iunmap A
-    iunmap B
-    iunmap C
-    iunmap D
-    iunmap E
-    iunmap F
-    iunmap G
-    iunmap H
-    iunmap I
-    iunmap J
-    iunmap K
-    iunmap L
-    iunmap M
-    iunmap N
-    iunmap O
-    iunmap P
-    iunmap Q
-    iunmap R
-    iunmap S
-    iunmap T
-    iunmap U
-    iunmap V
-    iunmap W
-    iunmap X
-    iunmap Y
-    iunmap Z
+    for cap in s:caps
+      execute 'iunmap ' . cap
+    endfor
     iunmap <BS>
   catch "E31.*"
     return
@@ -42,32 +19,9 @@ function! s:InitVariable()
   let s:algorithm = ''
   let s:index = 0
   let s:cur_pos = []
-  imap <silent> A <C-o><Plug>gen_algorithmGenerate
-  imap <silent> B <C-o><Plug>gen_algorithmGenerate
-  imap <silent> C <C-o><Plug>gen_algorithmGenerate
-  imap <silent> D <C-o><Plug>gen_algorithmGenerate
-  imap <silent> E <C-o><Plug>gen_algorithmGenerate
-  imap <silent> F <C-o><Plug>gen_algorithmGenerate
-  imap <silent> G <C-o><Plug>gen_algorithmGenerate
-  imap <silent> H <C-o><Plug>gen_algorithmGenerate
-  imap <silent> I <C-o><Plug>gen_algorithmGenerate
-  imap <silent> J <C-o><Plug>gen_algorithmGenerate
-  imap <silent> K <C-o><Plug>gen_algorithmGenerate
-  imap <silent> L <C-o><Plug>gen_algorithmGenerate
-  imap <silent> M <C-o><Plug>gen_algorithmGenerate
-  imap <silent> N <C-o><Plug>gen_algorithmGenerate
-  imap <silent> O <C-o><Plug>gen_algorithmGenerate
-  imap <silent> P <C-o><Plug>gen_algorithmGenerate
-  imap <silent> Q <C-o><Plug>gen_algorithmGenerate
-  imap <silent> R <C-o><Plug>gen_algorithmGenerate
-  imap <silent> S <C-o><Plug>gen_algorithmGenerate
-  imap <silent> T <C-o><Plug>gen_algorithmGenerate
-  imap <silent> U <C-o><Plug>gen_algorithmGenerate
-  imap <silent> V <C-o><Plug>gen_algorithmGenerate
-  imap <silent> W <C-o><Plug>gen_algorithmGenerate
-  imap <silent> X <C-o><Plug>gen_algorithmGenerate
-  imap <silent> Y <C-o><Plug>gen_algorithmGenerate
-  imap <silent> Z <C-o><Plug>gen_algorithmGenerate
+  for cap in s:caps
+    execute 'imap <silent> ' . cap . ' <C-o><Plug>gen_algorithmGenerate'
+  endfor
   imap <silent> <BS> <C-o><Plug>gen_algorithmRemove
 endfunction
 
@@ -85,32 +39,9 @@ function! s:DeleteVariable()
     unlet s:cur_pos
   endif
 
-  inoremap <silent> A <ESC>
-  inoremap <silent> B <ESC>
-  inoremap <silent> C <ESC>
-  inoremap <silent> D <ESC>
-  inoremap <silent> E <ESC>
-  inoremap <silent> F <ESC>
-  inoremap <silent> G <ESC>
-  inoremap <silent> H <ESC>
-  inoremap <silent> I <ESC>
-  inoremap <silent> J <ESC>
-  inoremap <silent> K <ESC>
-  inoremap <silent> L <ESC>
-  inoremap <silent> M <ESC>
-  inoremap <silent> N <ESC>
-  inoremap <silent> O <ESC>
-  inoremap <silent> P <ESC>
-  inoremap <silent> Q <ESC>
-  inoremap <silent> R <ESC>
-  inoremap <silent> S <ESC>
-  inoremap <silent> T <ESC>
-  inoremap <silent> U <ESC>
-  inoremap <silent> V <ESC>
-  inoremap <silent> W <ESC>
-  inoremap <silent> X <ESC>
-  inoremap <silent> Y <ESC>
-  inoremap <silent> Z <ESC>
+  for cap in s:caps
+    execute 'inoremap <silent> ' . cap . ' <ESC>'
+  endfor
   inoremap <silent> <BS> <ESC>
 endfunction
 
@@ -186,6 +117,7 @@ function! s:GetThirdPartPath()
   endfor
 endfunction
 
+let s:caps = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 let s:third_part_path = s:GetThirdPartPath()
 let s:filetype_suffix = {
       \ 'c': 'c', 
