@@ -40,9 +40,9 @@ function! s:DeleteVariable()
   endif
 
   for cap in s:caps
-    execute 'inoremap <silent> ' . cap . ' <ESC>'
+    execute 'inoremap <silent> ' . cap . ' <ESC>:<C-u>call <SID>ReleaseCapsAndBs()<CR>'
   endfor
-  inoremap <silent> <BS> <ESC>
+  inoremap <silent> <BS> <ESC>:<C-u>call <SID>ReleaseCapsAndBs()<CR>
 endfunction
 
 function! s:FindFile()
