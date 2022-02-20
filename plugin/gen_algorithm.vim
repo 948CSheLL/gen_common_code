@@ -3,46 +3,82 @@ if exists("g:loaded_algorithm") || &cp || v:version < 800
 endif
 let g:loaded_algorithm = 1
 
-function! s:ReleaseCapsAndBs() 
+function! s:Iunmap(mapping)
   try
-    for cap in s:caps
-      execute 'iunmap ' . cap
-    endfor
-    iunmap <BS>
+    execute 'iunmap ' . a:mapping
   catch "E31.*"
     return
   endtry
+endfunction
+
+function! s:LockKeyBoard()
+  if !exists('s:algorithm')
+    return ''
+  endif
+  let s:is_release = 0
+  call cursor(s:toggle_lnum, s:toggle_col)
+  for keyboard in s:keyboards
+    execute 'inoremap <silent> ' . keyboard . ' <C-r>=<SID>GenerateAlgorithm()<CR>'
+  endfor
+endfunction
+
+function! s:ReleaseKeyBoard() 
+  for keyboard in s:keyboards
+    call s:Iunmap(keyboard)
+  endfor
+  if !exists('s:algorithm')
+    return ''
+  endif
+  let s:is_release = 1
+  let cur_pos = getpos('.')
+  let s:toggle_lnum = cur_pos[1]
+  let s:toggle_col = cur_pos[2]
+  return ''
+endfunction
+
+function! s:GenerateToggle()
+  if exists("s:algorithm")
+    if s:is_release == 0
+      call s:ReleaseKeyBoard()
+    else
+      call s:LockKeyBoard()
+    endif
+  endif
+  return ''
 endfunction
 
 function! s:InitVariable()
   let s:algorithm_file = ''
   let s:algorithm = ''
   let s:index = 0
-  let s:cur_pos = []
-  for cap in s:caps
-    execute 'imap <silent> ' . cap . ' <C-o><Plug>gen_algorithmGenerate'
-  endfor
-  imap <silent> <BS> <C-o><Plug>gen_algorithmRollBack
+  let s:last_pos = []
+  let s:last_result = ''
+  let s:is_release = 0
+  let s:toggle_lnum = 0
+  let s:toggle_col = 0
+  call s:LockKeyBoard()
 endfunction
 
 function! s:DeleteVariable()
-  if exists("s:algorithm_file")
-    unlet s:algorithm_file
-  endif
   if exists("s:algorithm")
+    unlet s:algorithm_file
     unlet s:algorithm
-  endif
-  if exists("s:index")
     unlet s:index
+    unlet s:last_pos
+    unlet s:last_result
+    unlet s:is_release
+    unlet s:toggle_lnum
+    unlet s:toggle_col
   endif
-  if exists("s:cur_pos")
-    unlet s:cur_pos
-  endif
-
-  for cap in s:caps
-    execute 'inoremap <silent> ' . cap . ' <ESC>:<C-u>call <SID>ReleaseCapsAndBs()<CR>'
+  for keyboard in s:keyboards
+    execute 'inoremap <silent> ' . keyboard . ' <ESC>:<C-u>call <SID>ReleaseKeyBoard()<CR>'
   endfor
-  inoremap <silent> <BS> <ESC>:<C-u>call <SID>ReleaseCapsAndBs()<CR>
+endfunction
+
+function! s:BackToLastPos()
+  if exists('s:algorithm')
+    call cursor(s:last_pos[0], s:last_pos[1])
+  endif
 endfunction
 
 function! s:GetAlgorithmName(name)
@@ -60,6 +96,8 @@ function! s:FindFile()
   if !empty(algorithm_name)
     call s:InitVariable()
     let s:algorithm_file = fnamemodify(glob(s:third_part_path . '/algorithm_code/*' . algorithm_name . '*/' . &filetype . '/*.' . s:filetype_suffix[&filetype]), ":p")
+  else
+    call s:DeleteVariable()
   endif
 endfunction
 
@@ -75,46 +113,36 @@ function! s:GenerateAlgorithm()
   if empty(s:algorithm)
     call s:FindAlgorithm()
     if empty(s:algorithm)
-      call s:DeleteVariable()
       redraw!
-      return
+      return ''
     endif
   endif
+  let cur_pos = getpos('.')
+  if s:last_result ==# "\n"
+    call setline('.', '')
+    call cursor(cur_pos[1], 1)
+  endif
   let first = 1
+  let result = ''
   while first || (s:algorithm[s:index] =~# '\s' && s:algorithm[s:index - 1] =~# '\s')
     if first
       let first = 0
     endif
-    let save_reg_a = getreginfo('a')
-    let @a = s:algorithm[s:index]
-    execute 'normal "ap'
-    let curpos = getpos('.')
-    let lnum = curpos[1]
-    let column = curpos[2]
-    if !empty(s:cur_pos) && s:index < len(s:cur_pos)
-      let s:cur_pos[s:index][0] = lnum
-      let s:cur_pos[s:index][1] = column
-    else
-      call add(s:cur_pos, [lnum, column])
-    endif
+    let result = result . s:algorithm[s:index]
     let s:index = s:index + 1
     if s:index >= len(s:algorithm)
       call s:DeleteVariable()
       break
     endif 
   endwhile
-  call setreg('a', save_reg_a)
   redraw!
-endfunction
-
-function! s:RollBackAlgorithm()
-  if !empty(s:algorithm)
-    let s:index = max([s:index - 1, 0])
-    let lnum = s:cur_pos[s:index][0]
-    let column = s:cur_pos[s:index][1]
-    call cursor(lnum, column)
-    execute 'normal x'
+  if result ==# "\n"
+    let s:last_pos = [cur_pos[1] + 1, 1]
+  else
+    let s:last_pos = [cur_pos[1], cur_pos[2]]
   endif
+  let s:last_result = result
+  return result
 endfunction
 
 function! s:GetThirdPartPath()
@@ -251,7 +279,16 @@ endfunction
 
 let s:is_algorithm_update = 0
 let s:algorithm_list = {}
-let s:caps = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+" except '|'
+let s:keyboards = [
+      \ 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 
+      \ 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 
+      \ 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 
+      \ 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '[', ']', '{', '}', 
+      \ '1', '!', '2', '@', '3', '#', '4', '$', '5', '%', '6', '^', '7', '&', 
+      \ '\', ';', ':', '''', '"', ',', '<', '.', '>', '/', '?', '`', '~', 
+      \ '8', '*', '9', '(', '0', ')', '-', '_', '=', '+', 
+      \ '<BS>', '<TAB>', '<CR>', '<SPACE>', ]
 let s:third_part_path = s:GetThirdPartPath()
 let s:filetype_suffix = {
       \ 'c': 'c', 
@@ -265,10 +302,6 @@ call s:UpdateAlgorithmList()
 augroup gen_algorithm
   autocmd!
   autocmd FileType c,cpp,python,java 
-	\ noremap <silent> <Plug>gen_algorithmGenerate :<C-u>call <SID>GenerateAlgorithm()<CR>
-  autocmd FileType c,cpp,python,java 
-	\ noremap <silent> <Plug>gen_algorithmRollBack :<C-u>call <SID>RollBackAlgorithm()<CR>
-  autocmd FileType c,cpp,python,java 
 	\ noremap <silent> <Plug>gen_algorithmFindFile :<C-u>call <SID>FindFile()<CR>
   autocmd FileType c,cpp,python,java 
 	\ noremap <silent> <Plug>gen_algorithmSearchAlgorithm :<C-u>call <SID>SearchAlgorithm()<CR>
@@ -279,9 +312,13 @@ augroup gen_algorithm
   autocmd FileType c,cpp,python,java 
 	\ noremap <silent> <Plug>gen_algorithmDisplayAlgorithm :<C-u>call <SID>DisplayAlgorithmList()<CR>
   autocmd FileType c,cpp,python,java 
-	\ imap <leader>a <C-o><Plug>gen_algorithmGenerate
+	\ noremap <silent> <Plug>gen_algorithmBackToLastPos :<C-u>call <SID>BackToLastPos()<CR>a
+  autocmd FileType c,cpp,python,java 
+	\ nmap <silent> <F7> <Plug>gen_algorithmBackToLastPos
   autocmd FileType c,cpp,python,java 
 	\ nmap <silent> <F5> <Plug>gen_algorithmFindFile
+  autocmd FileType c,cpp,python,java 
+	\ inoremap <silent> <F6> <C-r>=<SID>GenerateToggle()<CR><ESC>
   autocmd FileType c,cpp,python,java 
 	\ nmap <silent> <F1> <Plug>gen_algorithmSearchAlgorithm
   autocmd FileType c,cpp,python,java 
