@@ -2,7 +2,7 @@
 
 ---
 
-Help generate algorithm templates during the interview process.
+A vim plugin. Help generate algorithm templates during the interview process.
 
 ## Installation
 
