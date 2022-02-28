@@ -1,0 +1,61 @@
+#include <stdio.h>
+#include <string.h>
+#include "CUnit/Basic.h"
+
+/* function_name 是需要被测试的函数名，返回值和参数都需要根据需要进行修改。*/
+extern int function_name(void);
+/* 下面的表达式需要使用function_name 执行测试数据，并将返回值和正确值进行比较，
+ * 相同返回1 ，不同返回0 。judge_expression 函数的返回值和参数都不用动。*/
+int judge_expression(void);
+/* 下面的test 函数需要根据要测试的函数function_name 进行命名，test后面接函数
+ * 名大写，该函数的返回值和类型都不需要动，编写内容时需要分别对每条测试数据
+ * 使用assert 。*/
+void testFUNCTION_NAME(void);
+/* 在下面调用CU_add_suite 的时候可以指定下面两个函数，前者是实现一些添加套件
+ * 时的初始化的内容，比如，打开某个文件指针，后者是实现一些套件被清除时的结束
+ * 处理，比如，关闭某个文件描述副。这两个函数的类型和返回值都不需要变。*/
+int init_suite1(void);
+int clean_suite1(void);
+
+int main() {
+    CU_pSuite pSuite = NULL;
+    /* 一开始需要初始化注册表 */
+    if (CUE_SUCCESS != CU_initialize_registry())
+        /* 发生错误就返回错误信息 */
+        return CU_get_error();
+    /* 将套件添加到注册表中，后面两个函数不需要可以指定为NULL 。 */
+    pSuite = CU_add_suite("Suite_1", init_suite1, clean_suite1);
+    if (NULL == pSuite) {
+        /* 发生错误需要清空注册表 */
+        CU_cleanup_registry();
+        return CU_get_error();
+    }
+    /* 将要测试函数通过函数指针的方式添加到套件中，CU_add_test 的第二个参数是
+     * 相关的测试描述内容。*/
+    if (NULL == CU_add_test(pSuite, "test of function_name()", testFUNCTION_NAME)) {
+        CU_cleanup_registry();
+        return CU_get_error();
+    }
+    /* 设置basic 模式下输出详细的测试信息 */
+    CU_basic_set_mode(CU_BRM_VERBOSE);
+    /* 运行测试，并在终端给出测试结果 */
+    CU_basic_run_tests();
+    /* 必须清空注册表 */
+    CU_cleanup_registry();
+    return CU_get_error();
+}
+
+void testFUNCTION_NAME(void) {
+    /* 需要自己写断言下面的只是示例。 */
+    CU_ASSERT(judge_expression());
+}
+
+int init_suite1(void) {
+    /* 需要自己写函数内容 */
+    return 0;
+}
+
+int clean_suite1(void) {
+    /* 需要自己写函数内容 */
+    return 0;
+}
