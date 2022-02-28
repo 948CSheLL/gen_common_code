@@ -28,6 +28,6 @@ int main() {
     return CU_get_error();
 }
 
-void testLOWER_BOUND(void) {
+void testFUNCTION_NAME(void) {
     CU_ASSERT(judge_expression());
 }
