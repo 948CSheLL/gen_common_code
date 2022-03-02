@@ -1,3 +1,4 @@
+
 #define SEG_SIZE 100005
 #define node_t int
 #define left_node(root) (root * 2)
