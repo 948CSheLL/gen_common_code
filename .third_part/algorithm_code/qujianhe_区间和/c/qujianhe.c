@@ -3,8 +3,6 @@
 #define node_t int
 #define left_node(root) (root * 2)
 #define right_node(root) (root * 2 + 1)
-#define max(a, b) (a > b ? a : b)
-#define min(a, b) (a < b ? a : b)
 
 struct SegmentTree {
     node_t sum;
