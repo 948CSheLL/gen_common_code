@@ -15,11 +15,11 @@ function! s:LockKeyBoard()
   if !exists('s:algorithm')
     return ''
   endif
-  let s:is_release = 0
   call cursor(s:toggle_lnum, s:toggle_col)
   for keyboard in s:keyboards
     execute 'inoremap <silent> ' . keyboard . ' <C-r>=<SID>GenerateAlgorithm()<CR>'
   endfor
+  return ''
 endfunction
 
 function! s:ReleaseKeyBoard() 
@@ -29,21 +29,9 @@ function! s:ReleaseKeyBoard()
   if !exists('s:algorithm')
     return ''
   endif
-  let s:is_release = 1
   let cur_pos = getpos('.')
   let s:toggle_lnum = cur_pos[1]
   let s:toggle_col = cur_pos[2]
-  return ''
-endfunction
-
-function! s:GenerateToggle()
-  if exists("s:algorithm")
-    if s:is_release == 0
-      call s:ReleaseKeyBoard()
-    else
-      call s:LockKeyBoard()
-    endif
-  endif
   return ''
 endfunction
 
@@ -53,7 +41,6 @@ function! s:InitVariable()
   let s:index = 0
   let s:last_pos = []
   let s:last_result = ''
-  let s:is_release = 0
   let s:toggle_lnum = 0
   let s:toggle_col = 0
   call s:LockKeyBoard()
@@ -66,7 +53,6 @@ function! s:DeleteVariable()
     unlet s:index
     unlet s:last_pos
     unlet s:last_result
-    unlet s:is_release
     unlet s:toggle_lnum
     unlet s:toggle_col
   endif
@@ -77,6 +63,7 @@ endfunction
 
 function! s:BackToLastPos()
   if exists('s:algorithm')
+    call s:LockKeyBoard()
     call cursor(s:last_pos[0], s:last_pos[1])
   endif
 endfunction
@@ -376,9 +363,13 @@ augroup gen_algorithm
   autocmd FileType c,cpp,python,java 
 	\ nmap <silent> <F7> <Plug>gen_algorithmBackToLastPos
   autocmd FileType c,cpp,python,java 
+	\ imap <silent> <F7> <ESC><Plug>gen_algorithmBackToLastPos
+  autocmd FileType c,cpp,python,java 
 	\ nmap <silent> <F5> <Plug>gen_algorithmFindFile
   autocmd FileType c,cpp,python,java 
-	\ inoremap <silent> <F6> <C-r>=<SID>GenerateToggle()<CR><ESC>
+	\ imap <silent> <F5> <ESC><Plug>gen_algorithmFindFile
+  autocmd FileType c,cpp,python,java 
+	\ inoremap <silent> <F6> <C-r>=<SID>ReleaseKeyBoard()<CR><ESC>
   autocmd FileType c,cpp,python,java 
 	\ nmap <silent> <F1> <Plug>gen_algorithmSearchAlgorithm
   autocmd FileType c,cpp,python,java 
