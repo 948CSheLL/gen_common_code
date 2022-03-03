@@ -1,4 +1,4 @@
-if exists("g:loaded_algorithm") || &cp || v:version < 800
+if exists('g:loaded_algorithm') || &cp || v:version < 800
   finish
 endif
 let g:loaded_algorithm = 1
@@ -85,20 +85,82 @@ function! s:GetAlgorithmName(name)
   return join(split(substitute(a:name, '\A', ' ', 'g'), ' '), '')
 endfunction
 
-function! s:FindFile()
+function! s:InitGetUserPrompt()
+  let s:secret_user_prompt = ''
+  for keyboard in s:keyboards
+    if keyboard =~# '^\a'
+      execute 'inoremap <silent> ' . keyboard . ' <C-r>=<SID>GettingUserPrompt(''' . keyboard . ''')<CR>'
+    elseif keyboard ==# '<CR>'
+      execute 'inoremap <silent> ' . keyboard . ' <C-r>=<SID>GettedUserPrompt()<CR><ESC>'
+    endif
+  endfor
+endfunction
+
+function! s:DeleteGetUserPrompt()
+  if exists('s:secret_user_prompt')
+    unlet s:secret_user_prompt
+  endif
+  for keyboard in s:keyboards
+    if keyboard =~# '^\a'
+      call s:Iunmap(keyboard)
+    elseif keyboard ==# '<CR>'
+      call s:Iunmap(keyboard)
+    endif
+  endfor
+endfunction
+
+function! s:BeginGetUserPrompt()
+  call s:DeleteGetUserPrompt()
+  call s:InitGetUserPrompt()
+endfunction
+
+function! s:GettingUserPrompt(input_letter)
+  if !exists('s:secret_user_prompt')
+    call s:InitGetUserPrompt()
+  endif
+  let s:secret_user_prompt = s:secret_user_prompt . a:input_letter
+  return ''
+endfunction
+
+function! s:GettedUserPrompt()
+  if exists('s:secret_user_prompt')
+    let user_input = s:secret_user_prompt
+  else
+    let user_input = ''
+  endif
+  call s:DeleteGetUserPrompt()
+  call s:FindFile(user_input)
+  return ''
+endfunction
+
+function! s:FindFile(secret_user_prompt)
   if s:is_algorithm_update
     let s:is_algorithm_update = 0
     call s:UpdateAlgorithmList()
   endif
   call s:DeleteVariable()
-  let user_input = inputsecret("")
+  let user_input = a:secret_user_prompt
   let algorithm_name = s:GetAlgorithmName(user_input)
-  if !empty(algorithm_name)
-    call s:InitVariable()
-    let s:algorithm_file = fnamemodify(glob(s:third_part_path . '/algorithm_code/*' . algorithm_name . '*/' . &filetype . '/*.' . s:filetype_suffix[&filetype]), ":p")
-  else
+  if empty(algorithm_name)
     call s:DeleteVariable()
+    return
   endif
+  call s:InitVariable()
+  let temp = algorithm_name
+  let algorithm_name = ''
+  for char in temp
+    let algorithm_name = algorithm_name . char . '*'
+  endfor
+  let s:algorithm_file = get(split(glob(
+        \ s:third_part_path . '/algorithm_code/' . algorithm_name . '/' . 
+        \ &filetype . '/*.' . s:filetype_suffix[&filetype]), "\n"), 0, '')
+  if empty(algorithm_name)
+    call s:DeleteVariable()
+    return
+  endif
+  let s:algorithm_file = fnamemodify(s:algorithm_file, ":p")
+  echo s:algorithm_file
+  sleep 5
 endfunction
 
 function! s:FindAlgorithm()
@@ -302,7 +364,7 @@ call s:UpdateAlgorithmList()
 augroup gen_algorithm
   autocmd!
   autocmd FileType c,cpp,python,java 
-	\ noremap <silent> <Plug>gen_algorithmFindFile :<C-u>call <SID>FindFile()<CR>
+	\ noremap <silent> <Plug>gen_algorithmFindFile :<C-u>call <SID>BeginGetUserPrompt()<CR>i
   autocmd FileType c,cpp,python,java 
 	\ noremap <silent> <Plug>gen_algorithmSearchAlgorithm :<C-u>call <SID>SearchAlgorithm()<CR>
   autocmd FileType c,cpp,python,java 
