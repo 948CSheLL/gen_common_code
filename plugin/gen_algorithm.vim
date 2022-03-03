@@ -1,4 +1,4 @@
-if exists('g:loaded_algorithm') || &cp || v:version < 800
+if exists("g:loaded_algorithm") || &cp || v:version < 800
   finish
 endif
 let g:loaded_algorithm = 1
@@ -154,13 +154,11 @@ function! s:FindFile(secret_user_prompt)
   let s:algorithm_file = get(split(glob(
         \ s:third_part_path . '/algorithm_code/' . algorithm_name . '/' . 
         \ &filetype . '/*.' . s:filetype_suffix[&filetype]), "\n"), 0, '')
-  if empty(algorithm_name)
+  if empty(s:algorithm_file)
     call s:DeleteVariable()
     return
   endif
   let s:algorithm_file = fnamemodify(s:algorithm_file, ":p")
-  echo s:algorithm_file
-  sleep 5
 endfunction
 
 function! s:FindAlgorithm()
