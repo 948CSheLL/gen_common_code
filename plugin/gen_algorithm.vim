@@ -21,7 +21,8 @@ function! s:ExecuteMap(map_index, join_string) abort
 endfunction
 
 function! s:GetAlgorithmName(name) abort
-  return join(split(substitute(a:name, '\A', ' ', 'g'), ' '), '')
+  let name = join(split(substitute(a:name, '\A', ' ', 'g'), ' '), '')
+  return name
 endfunction
 
 function! s:InitGetUserPrompt() abort
@@ -115,7 +116,7 @@ function! s:InitVariable() abort
   let s:last_pos = []
   let s:current_char = ''
   let s:stack = []
-  let s:next_char = s:algorithm[0]
+  let s:next_char = ''
   let s:save_keyboard_oper = {}
   let s:pair_right_indent = 0
   for keyboard in s:keyboard_ban_list
@@ -184,7 +185,11 @@ endfunction
 function! s:BackToLastPos() abort
   if exists('s:algorithm')
     call s:LockKeyBoard()
-    call cursor(s:last_pos[0], s:last_pos[1])
+    if !empty(get(s:pairs, s:TopStack()[0], ''))
+      call cursor(s:last_pos[0], s:last_pos[1] - 1)
+    else
+      call cursor(s:last_pos[0], s:last_pos[1])
+    endif
   endif
 endfunction
 
@@ -211,7 +216,8 @@ function! s:PopStack() abort
     return ['', 0]
   endif
   if len(s:stack) ># 0
-    return remove(s:stack, -1)
+    let pop_content = remove(s:stack, -1)
+    return pop_content
   else
     return ['', 0]
   endif
@@ -222,7 +228,8 @@ function! s:TopStack() abort
     return ['', 0]
   endif
   if len(s:stack) >=# 1
-    return s:stack[-1]
+    let top_content = s:stack[-1]
+    return top_content
   else
     return ['', 0]
   endif
@@ -233,7 +240,8 @@ function! s:TopTwoStack() abort
     return ['', 0]
   endif
   if len(s:stack) >=# 2
-    return s:stack[-2]
+    let top_two_content = s:stack[-2]
+    return top_two_content
   else
     return ['', 0]
   endif
@@ -324,7 +332,8 @@ function! s:HandlePairLeft() abort
   else
     call s:PushStack([s:algorithm[s:index], indent('.')])
   endif
-  return s:algorithm[s:index] . get(s:pairs, s:algorithm[s:index], " \b")
+  let result = s:algorithm[s:index] . get(s:pairs, s:algorithm[s:index], " \b")
+  return result
 endfunction
 
 " 处理\npairs 右边
@@ -332,14 +341,16 @@ function! s:HandleBackslashNPairRight() abort
   if !exists('s:algorithm')
     return " \b"
   endif
+  let result = ''
   if s:TopStack()[0] ==# '\'
     call s:PopStack()
-    return s:algorithm[s:index]
+    let result = s:algorithm[s:index]
   else
     call s:PopStack()
     let s:pair_right_indent = s:PopStack()[1]
-    return " \b"
+    let result = " \b"
   endif
+  return result
 endfunction
 
 " 处理pairs 右边
@@ -347,13 +358,15 @@ function! s:HandlePairRight() abort
   if !exists('s:algorithm')
     return " \b"
   endif
+  let result = ''
   if s:TopStack()[0] ==# '\'
     call s:PopStack()
-    return s:algorithm[s:index]
+    let result = s:algorithm[s:index]
   else
     call s:PopStack()
-    return " \b"
+    let result = " \b"
   endif
+  return result
 endfunction
 
 " 处理\n
@@ -408,7 +421,8 @@ function! s:HandleBackslash() abort
   else
     call s:PushStack('\')
   endif
-  return s:algorithm[s:index]
+  let result = s:algorithm[s:index]
+  return result
 endfunction
 
 " 处理其他
@@ -419,7 +433,8 @@ function! s:HandleOther() abort
   if s:TopStack()[0] ==# '\'
     call s:PopStack()
   endif
-  return s:algorithm[s:index]
+  let result = s:algorithm[s:index]
+  return result
 endfunction
 
 function! s:DecideNextOper() abort
@@ -463,7 +478,6 @@ function! s:SetPairLeftPos() abort
   endif
   let cur_pos = getpos('.')
   call cursor(cur_pos[1], cur_pos[2] - 1)
-  let s:last_pos = [cur_pos[1], cur_pos[2] - 1]
   call s:BeforeHandlePairs()
   call s:DecideNextOper()
   return " \b"
@@ -477,7 +491,6 @@ function! s:SetPairLeftBackslashNPos() abort
   let line_content = repeat(' ', s:TopTwoStack()[1]) . get(s:pairs, s:TopTwoStack()[0], '')
   call setline(cur_pos[1], line_content)
   call cursor(cur_pos[1] - 1, 1)
-  let s:last_pos = [cur_pos[1] - 1, 1]
   call s:BeforeHandlePairs()
   call s:DecideNextOper()
   return " \b"
@@ -492,6 +505,11 @@ function! s:SetBackslashNPairRightPos() abort
   let s:last_pos = [cur_pos[1] + 1, s:pair_right_indent + 2]
   call s:BeforeHandlePairs()
   call s:DecideNextOper()
+  if s:next_char != "\n" 
+	\ && !s:Is_valid_pair_right(s:next_char) 
+	\ && !s:Is_valid_backslash_n_pair_right(s:next_char)
+    call s:BackslashBanKeyboard()
+  endif
   return " \b"
 endfunction
 
@@ -501,7 +519,6 @@ function! s:SetPairRightPos() abort
   endif
   let cur_pos = getpos('.')
   call cursor(cur_pos[1], cur_pos[2] + 1)
-  let s:last_pos = [cur_pos[1], cur_pos[2] + 1]
   call s:BeforeHandlePairs()
   call s:DecideNextOper()
   return " \b"
@@ -516,7 +533,6 @@ function! s:SetBackslashNPos() abort
     let result = s:HandleWhiteSpace()
     call s:SetIndexAddOne()
   endif
-  let cur_pos = getpos('.')
   call setline('.', '')
   if exists('s:algorithm') 
 	\ && s:Is_valid_backslash_n_pair_right(s:algorithm[s:index])
@@ -527,18 +543,28 @@ function! s:SetBackslashNPos() abort
   return result
 endfunction
 
+function! s:BackslashBanKeyboard()
+  if !exists('s:algorithm')
+    return
+  endif
+  for keyboard in s:keyboard_pick_list
+    if keyboard ==# '"'
+      execute 'inoremap <silent> ' . keyboard . ' <C-r>=<SID>RecoverKeyboard()<CR>'
+    else
+      execute 'inoremap <silent> ' . keyboard . ' <NOP>'
+    endif
+  endfor
+endfunction
+
 function! s:SetLastPos() abort
   if !exists('s:algorithm')
     return " \b"
   endif
-  if s:current_char ==# "\n"
-    for keyboard in s:keyboard_pick_list
-      if keyboard ==# '"'
-	execute 'inoremap <silent> ' . keyboard . ' <C-r>=<SID>RecoverKeyboard()<CR>'
-      else
-	execute 'inoremap <silent> ' . keyboard . ' <NOP>'
-      endif
-    endfor
+  if s:current_char ==# "\n" 
+	\ && s:algorithm[s:index] !=# "\n" 
+	\ && !s:Is_valid_pair_right(s:algorithm[s:index])
+	\ && !s:Is_valid_backslash_n_pair_right(s:algorithm[s:index])
+    call s:BackslashBanKeyboard()
   endif
   let cur_pos = getpos('.')
   let s:last_pos = [cur_pos[1], cur_pos[2]]
@@ -586,9 +612,10 @@ function! s:GenerateAlgorithm(press_tab) abort
 endfunction
 
 function! s:GetThirdPartPath() abort
-  for var in split(&runtimepath, ',')
-    if isdirectory(var . '/.third_part')
-      return var . '/.third_part'
+  for path in split(&runtimepath, ',')
+    if isdirectory(path . '/.third_part')
+      let result = path . '/.third_part'
+      return result
     endif
   endfor
 endfunction
@@ -676,7 +703,7 @@ function! s:SearchAlgorithm() abort
     call s:UpdateAlgorithmList()
   endif
   let type = input('Which file type do you want to search? [src/doc, default: src]: ')
-  if empty(type) || type ==? 'src'
+  if type ==? 'src' || empty(type)
     let type = 'src'
   else
     let type = 'doc'
@@ -730,10 +757,10 @@ let s:pairs = {
 let s:GenerateOper = [
       \ ['inoremap <silent> ', ' <C-r>=<SID>GenerateAlgorithm(1)<CR><C-r>=<SID>SetLastPos()<CR>'], 
       \ ['inoremap <silent> ', ' <C-r>=<SID>GenerateAlgorithm(0)<CR><C-r>=<SID>SetLastPos()<CR>'], 
-      \ ['inoremap <silent> ', ' <C-r>=<SID>GenerateAlgorithm(0)<CR><C-r>=<SID>SetPairLeftPos()<CR>'], 
-      \ ['inoremap <silent> ', ' <C-r>=<SID>GenerateAlgorithm(0)<CR><C-r>=<SID>SetPairLeftBackslashNPos()<CR><C-r>=<SID>SetBackslashNPos()<CR>'], 
+      \ ['inoremap <silent> ', ' <C-r>=<SID>GenerateAlgorithm(0)<CR><C-r>=<SID>SetPairLeftPos()<CR><C-r>=<SID>SetLastPos()<CR>'], 
+      \ ['inoremap <silent> ', ' <C-r>=<SID>GenerateAlgorithm(0)<CR><C-r>=<SID>SetPairLeftBackslashNPos()<CR><C-r>=<SID>SetBackslashNPos()<CR><C-r>=<SID>SetLastPos()<CR>'], 
       \ ['inoremap <silent> ', ' <C-r>=<SID>GenerateAlgorithm(0)<CR><C-r>=<SID>SetBackslashNPairRightPos()<CR>'], 
-      \ ['inoremap <silent> ', ' <C-r>=<SID>GenerateAlgorithm(0)<CR><C-r>=<SID>SetPairRightPos()<CR>'], 
+      \ ['inoremap <silent> ', ' <C-r>=<SID>GenerateAlgorithm(0)<CR><C-r>=<SID>SetPairRightPos()<CR><C-r>=<SID>SetLastPos()<CR>'], 
       \ ['inoremap <silent> ', ' <C-r>=<SID>GettingUserPrompt(''', ''')<CR>'], 
       \ ['inoremap <silent> ', ' <C-r>=<SID>GettedUserPrompt()<CR><ESC>'], 
       \ ['inoremap <silent> ', ' <ESC>:<C-u>call <SID>ReleaseKeyBoard()<CR>'], 
