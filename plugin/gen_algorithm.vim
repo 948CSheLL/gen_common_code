@@ -50,6 +50,10 @@ function! s:DeleteGetUserPrompt() abort
 endfunction
 
 function! s:BeginGetUserPrompt() abort
+  if !exists('s:is_algorithm_code_exist')
+    call s:ExchangeAlgorithmPath()
+    return
+  endif
   call s:DeleteGetUserPrompt()
   call s:InitGetUserPrompt()
 endfunction
@@ -183,6 +187,10 @@ function! s:ReleaseKeyBoard() abort
 endfunction
 
 function! s:BackToLastPos() abort
+  if !exists('s:is_algorithm_code_exist')
+    call s:ExchangeAlgorithmPath()
+    return
+  endif
   if exists('s:algorithm')
     call s:LockKeyBoard()
     if !empty(get(s:pairs, s:TopStack()[0], ''))
@@ -620,9 +628,51 @@ function! s:GetThirdPartPath() abort
   endfor
 endfunction
 
+function! s:ExchangeAlgorithmPath() abort
+  if !isdirectory(s:third_part_path . '/algorithm_code')
+    let user_input = input('Algorithm code do not exist, do you want to add it? [default: yes]:')
+    if !empty(user_input) && (user_input ==? 'no' || user_input ==? 'n')
+      return
+    endif
+  else
+    let user_input = input('Algorithm code exists, do you want to exchange? [default: no]:')
+    if empty(user_input) || user_input ==? 'no' || user_input ==? 'n'
+      return
+    endif
+  endif
+  let user_input = input('Please input algorithm code path: ')
+  if empty(user_input)
+    call delete(s:third_part_path . '/algorithm_code', "rf")
+    call s:UpdateAlgorithmList()
+    redraw!
+    return
+  endif
+  while !isdirectory(fnamemodify(user_input, ":p"))
+    if exists('s:is_algorithm_code_exist')
+      unlet s:is_algorithm_code_exist
+    endif
+    let user_input = input('Please input a valid path: ')
+    if empty(user_input)
+      call delete(s:third_part_path . '/algorithm_code', "rf")
+      call s:UpdateAlgorithmList()
+      redraw!
+      return
+    endif
+  endwhile
+  call system('ln -s ' . fnamemodify(user_input, ":p") . ' ' . s:third_part_path . '/algorithm_code')
+  let s:is_algorithm_code_exist = 1
+  call s:UpdateAlgorithmList()
+  redraw!
+endfunction
+
 function! s:UpdateAlgorithmList() abort
+  if isdirectory(s:third_part_path . '/algorithm_code')
+    let s:is_algorithm_code_exist = 1
+  else
+    return
+  endif
   let s:algorithm_list = {}
-  let full_directory_list = split(glob(s:third_part_path . "/algorithm_code/*"),"\n")
+  let full_directory_list = split(glob(s:third_part_path . '/algorithm_code/*'),"\n")
   for full_directory_name in full_directory_list
     let algorithm_name = s:GetAlgorithmName(fnamemodify(full_directory_name, ":t"))
     let s:algorithm_list[algorithm_name] = {
@@ -633,6 +683,10 @@ function! s:UpdateAlgorithmList() abort
 endfunction
 
 function! s:DisplayAlgorithmList() abort
+  if !exists('s:is_algorithm_code_exist')
+    call s:ExchangeAlgorithmPath()
+    return
+  endif
   if s:is_algorithm_update
     let s:is_algorithm_update = 0
     call s:UpdateAlgorithmList()
@@ -644,6 +698,10 @@ function! s:DisplayAlgorithmList() abort
 endfunction
 
 function! s:RenameAlgorithm() abort
+  if !exists('s:is_algorithm_code_exist')
+    call s:ExchangeAlgorithmPath()
+    return
+  endif
   if s:is_algorithm_update
     let s:is_algorithm_update = 0
     call s:UpdateAlgorithmList()
@@ -678,6 +736,10 @@ function! s:RenameAlgorithm() abort
 endfunction
 
 function! s:RemoveAlgorithm() abort
+  if !exists('s:is_algorithm_code_exist')
+    call s:ExchangeAlgorithmPath()
+    return
+  endif
   if s:is_algorithm_update
     let s:is_algorithm_update = 0
     call s:UpdateAlgorithmList()
@@ -698,6 +760,10 @@ function! s:RemoveAlgorithm() abort
 endfunction
 
 function! s:SearchAlgorithm() abort
+  if !exists('s:is_algorithm_code_exist')
+    call s:ExchangeAlgorithmPath()
+    return
+  endif
   if s:is_algorithm_update
     let s:is_algorithm_update = 0
     call s:UpdateAlgorithmList()
@@ -801,15 +867,21 @@ augroup gen_algorithm
   autocmd FileType c,cpp,python,java 
 	\ noremap <silent> <Plug>gen_algorithmBackToLastPos :<C-u>call <SID>BackToLastPos()<CR>a
   autocmd FileType c,cpp,python,java 
-	\ nmap <silent> <F7> <Plug>gen_algorithmBackToLastPos
+	\ noremap <silent> <Plug>gen_algorithmExchangeAlgorithmPath :<C-u>call <SID>ExchangeAlgorithmPath()<CR>
   autocmd FileType c,cpp,python,java 
-	\ imap <silent> <F7> <ESC><Plug>gen_algorithmBackToLastPos
+	\ nmap <silent> <F5> <Plug>gen_algorithmExchangeAlgorithmPath
   autocmd FileType c,cpp,python,java 
-	\ nmap <silent> <F5> <Plug>gen_algorithmFindFile
+	\ imap <silent> <F5> <ESC><Plug>gen_algorithmExchangeAlgorithmPath
   autocmd FileType c,cpp,python,java 
-	\ imap <silent> <F5> <ESC><Plug>gen_algorithmFindFile
+	\ nmap <silent> <F8> <Plug>gen_algorithmBackToLastPos
   autocmd FileType c,cpp,python,java 
-	\ inoremap <silent> <F6> <C-r>=<SID>ReleaseKeyBoard()<CR><ESC>
+	\ imap <silent> <F8> <ESC><Plug>gen_algorithmBackToLastPos
+  autocmd FileType c,cpp,python,java 
+	\ nmap <silent> <F6> <Plug>gen_algorithmFindFile
+  autocmd FileType c,cpp,python,java 
+	\ imap <silent> <F6> <ESC><Plug>gen_algorithmFindFile
+  autocmd FileType c,cpp,python,java 
+	\ inoremap <silent> <F7> <C-r>=<SID>ReleaseKeyBoard()<CR><ESC>
   autocmd FileType c,cpp,python,java 
 	\ nmap <silent> <F1> <Plug>gen_algorithmSearchAlgorithm
   autocmd FileType c,cpp,python,java 
