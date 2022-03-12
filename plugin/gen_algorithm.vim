@@ -676,6 +676,9 @@ function! s:UpdateAlgorithmList() abort
   let s:algorithm_list = {}
   let full_directory_list = split(glob(s:third_part_path . '/algorithm_code/*'),"\n")
   for full_directory_name in full_directory_list
+    if !isdirectory(full_directory_name)
+      continue
+    endif
     let algorithm_name = s:GetAlgorithmName(fnamemodify(full_directory_name, ":t"))
     let s:algorithm_list[algorithm_name] = {
 	  \ 'directory_name': fnamemodify(full_directory_name, ":t"), 
