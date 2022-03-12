@@ -638,6 +638,8 @@ function! s:ExchangeAlgorithmPath() abort
     let user_input = input('Algorithm code exists, do you want to exchange? [default: no]:')
     if empty(user_input) || user_input ==? 'no' || user_input ==? 'n'
       return
+    else
+      call delete(s:third_part_path . '/algorithm_code', "rf")
     endif
   endif
   let user_input = input('Please input algorithm code path: ')
