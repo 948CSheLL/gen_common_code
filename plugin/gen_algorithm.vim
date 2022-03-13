@@ -622,9 +622,11 @@ endfunction
 function! s:GetThirdPartPath() abort
   let script_file_path = expand('<sfile>')
   let plugin_path = fnamemodify(script_file_path, ":h:h")
-  if !isdirectory(plugin_path . '/.third_part')
-    call mkdir(plugin_path . '/.third_part', 'p', 0700)
+  let third_part_path = plugin_path . '/.third_part'
+  if !isdirectory(third_part_path)
+    call mkdir(third_part_path, 'p', 0700)
   endif
+  return third_part_path
 endfunction
 
 function! s:ExchangeAlgorithmPath() abort
