@@ -620,12 +620,11 @@ function! s:GenerateAlgorithm(press_tab) abort
 endfunction
 
 function! s:GetThirdPartPath() abort
-  for path in split(&runtimepath, ',')
-    if isdirectory(path . '/.third_part')
-      let result = path . '/.third_part'
-      return result
-    endif
-  endfor
+  let script_file_path = expand('<sfile>')
+  let plugin_path = fnamemodify(script_file_path, ":h:h")
+  if !isdirectory(plugin_path . '/.third_part')
+    call mkdir(plugin_path . '/.third_part', 'p', 0700)
+  endif
 endfunction
 
 function! s:ExchangeAlgorithmPath() abort
