@@ -14,11 +14,33 @@ A vim plugin. Help generate algorithm templates during the interview process.
   - `call minpac#add('948CSheLL/gen_common_code')`
 
 ## Mappings
+Add following configuration to your `.vimrc`:
 
-- Type `<F1>` in normal mode，you can view, modify, and add algorithms and documentations by following the prompts in command line. If you want to add a new algorithm, you need to include easy-to-remember letters in the algorithm name to facilitate algorithm retrieval when generating the algorithm.
+```
+augroup plugin_gen_common_code
+  autocmd!
+  autocmd FileType c,cpp,python,java 
+	\ nmap <silent> <F5> <Plug>gen_algorithmExchangeAlgorithmPath
+  autocmd FileType c,cpp,python,java 
+	\ imap <silent> <F5> <ESC><Plug>gen_algorithmExchangeAlgorithmPath
+  autocmd FileType c,cpp,python,java 
+	\ nmap <silent> <F8> <Plug>gen_algorithmBackToLastPos
+  autocmd FileType c,cpp,python,java 
+	\ imap <silent> <F8> <ESC><Plug>gen_algorithmBackToLastPos
+  autocmd FileType c,cpp,python,java 
+	\ nmap <silent> <F6> <Plug>gen_algorithmFindFile
+  autocmd FileType c,cpp,python,java 
+	\ imap <silent> <F6> <ESC><Plug>gen_algorithmFindFile
+  autocmd FileType c,cpp,python,java 
+	\ imap <silent> <F7> <Plug>gen_algorithmReleaseKeyBoard<ESC>
+  autocmd FileType c,cpp,python,java 
+	\ nmap <silent> <F1> <Plug>gen_algorithmSearchAlgorithm
+  autocmd FileType c,cpp,python,java 
+	\ nmap <silent> <F2> <Plug>gen_algorithmRenameAlgorithm
+  autocmd FileType c,cpp,python,java 
+	\ nmap <silent> <F3> <Plug>gen_algorithmRemoveAlgorithm
+  autocmd FileType c,cpp,python,java 
+	\ nmap <silent> <F4> <Plug>gen_algorithmDisplayAlgorithm
+augroup END
+```
 
-- Type`<F2>` in normal mode, you can rename an existed algorithm's name to an new name including letters.
-
-- Type`<F3>` in normal mode, you can remove an existed algorithm.
-
-- Type`<F4>` in normal mode, you can watch a list of existed algorithm in command line.

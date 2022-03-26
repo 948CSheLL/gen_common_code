@@ -875,25 +875,5 @@ augroup gen_algorithm
   autocmd FileType c,cpp,python,java 
 	\ noremap <silent> <Plug>gen_algorithmExchangeAlgorithmPath :<C-u>call <SID>ExchangeAlgorithmPath()<CR>
   autocmd FileType c,cpp,python,java 
-	\ nmap <silent> <F5> <Plug>gen_algorithmExchangeAlgorithmPath
-  autocmd FileType c,cpp,python,java 
-	\ imap <silent> <F5> <ESC><Plug>gen_algorithmExchangeAlgorithmPath
-  autocmd FileType c,cpp,python,java 
-	\ nmap <silent> <F8> <Plug>gen_algorithmBackToLastPos
-  autocmd FileType c,cpp,python,java 
-	\ imap <silent> <F8> <ESC><Plug>gen_algorithmBackToLastPos
-  autocmd FileType c,cpp,python,java 
-	\ nmap <silent> <F6> <Plug>gen_algorithmFindFile
-  autocmd FileType c,cpp,python,java 
-	\ imap <silent> <F6> <ESC><Plug>gen_algorithmFindFile
-  autocmd FileType c,cpp,python,java 
-	\ inoremap <silent> <F7> <C-r>=<SID>ReleaseKeyBoard()<CR><ESC>
-  autocmd FileType c,cpp,python,java 
-	\ nmap <silent> <F1> <Plug>gen_algorithmSearchAlgorithm
-  autocmd FileType c,cpp,python,java 
-	\ nmap <silent> <F2> <Plug>gen_algorithmRenameAlgorithm
-  autocmd FileType c,cpp,python,java 
-	\ nmap <silent> <F3> <Plug>gen_algorithmRemoveAlgorithm
-  autocmd FileType c,cpp,python,java 
-	\ nmap <silent> <F4> <Plug>gen_algorithmDisplayAlgorithm
+	\ noremap <silent> <Plug>gen_algorithmReleaseKeyBoard <C-r>=<SID>ReleaseKeyBoard()<CR>
 augroup END
