@@ -30,7 +30,7 @@ function! s:InitGetUserPrompt() abort
   for keyboard in s:keyboard_pick_list
     if keyboard =~# '^\a'
       call s:ExecuteMap(6, keyboard)
-    elseif keyboard ==# ';'
+    elseif keyboard ==# ';;'
       call s:ExecuteMap(7, keyboard)
     endif
   endfor
@@ -43,7 +43,7 @@ function! s:DeleteGetUserPrompt() abort
   for keyboard in s:keyboard_pick_list
     if keyboard =~# '^\a'
       call s:Iunmap(keyboard)
-    elseif keyboard ==# ';'
+    elseif keyboard ==# ';;'
       call s:Iunmap(keyboard)
     endif
   endfor
@@ -127,7 +127,7 @@ function! s:InitVariable() abort
     call s:ExecuteMap(10, keyboard)
   endfor
   for keyboard in s:keyboard_pick_list
-    if keyboard ==# ';'
+    if keyboard ==# ';;'
       call s:ExecuteMap(0, keyboard)
     else
       call s:ExecuteMap(1, keyboard)
@@ -472,7 +472,7 @@ function! s:BeforeHandlePairs() abort
     call s:ExecuteMap(10, keyboard)
   endfor
   for keyboard in s:keyboard_pick_list
-    if keyboard ==# ';'
+    if keyboard ==# ';;'
       call s:ExecuteMap(0, keyboard)
     else
       call s:ExecuteMap(1, keyboard)
@@ -556,7 +556,7 @@ function! s:BackslashBanKeyboard()
     return
   endif
   for keyboard in s:keyboard_pick_list
-    if keyboard ==# ';'
+    if keyboard ==# ';;'
       execute 'inoremap <silent> ' . keyboard . ' <C-r>=<SID>RecoverKeyboard()<CR>'
     else
       execute 'inoremap <silent> ' . keyboard . ' <NOP>'
