@@ -17,30 +17,23 @@ A vim plugin. Help generate algorithm templates during the interview process.
 Add following configuration to your `.vimrc`:
 
 ```
-augroup plugin_gen_common_code
-  autocmd!
-  autocmd FileType c,cpp,python,java 
-	\ nmap <silent> <F5> <Plug>gen_algorithmExchangeAlgorithmPath
-  autocmd FileType c,cpp,python,java 
-	\ imap <silent> <F5> <ESC><Plug>gen_algorithmExchangeAlgorithmPath
-  autocmd FileType c,cpp,python,java 
-	\ nmap <silent> <F8> <Plug>gen_algorithmBackToLastPos
-  autocmd FileType c,cpp,python,java 
-	\ imap <silent> <F8> <ESC><Plug>gen_algorithmBackToLastPos
-  autocmd FileType c,cpp,python,java 
-	\ nmap <silent> <F6> <Plug>gen_algorithmFindFile
-  autocmd FileType c,cpp,python,java 
-	\ imap <silent> <F6> <ESC><Plug>gen_algorithmFindFile
-  autocmd FileType c,cpp,python,java 
-	\ imap <silent> <F7> <Plug>gen_algorithmReleaseKeyBoard<ESC>
-  autocmd FileType c,cpp,python,java 
-	\ nmap <silent> <F1> <Plug>gen_algorithmSearchAlgorithm
-  autocmd FileType c,cpp,python,java 
-	\ nmap <silent> <F2> <Plug>gen_algorithmRenameAlgorithm
-  autocmd FileType c,cpp,python,java 
-	\ nmap <silent> <F3> <Plug>gen_algorithmRemoveAlgorithm
-  autocmd FileType c,cpp,python,java 
-	\ nmap <silent> <F4> <Plug>gen_algorithmDisplayAlgorithm
-augroup END
+" except '|'
+let g:gcc_keyboard_ban_list = ['<BS>', '<TAB>', '<CR>', '<SPACE>', ]
+let g:gcc_keyboard_pick_list = [
+      \ 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 
+      \ 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 
+      \ 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 
+      \ 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '[', ']', '{', '}', 
+      \ '1', '!', '2', '@', '3', '#', '4', '$', '5', '%', '6', '^', '7', '&', 
+      \ '\', ';', ':', '''', '"', ',', '<', '.', '>', '/', '?', '`', '~', 
+      \ '8', '*', '9', '(', '0', ')', '-', '_', '=', '+', ]
+let g:gcc_search_algorithm = '<Leader>1'
+let g:gcc_rename_algorithm = '<Leader>2'
+let g:gcc_remove_algorithm = '<Leader>3'
+let g:gcc_display_algorithm = '<Leader>4'
+let g:gcc_exchange_algorithm_path = '<Leader>5'
+let g:gcc_find_file = '<Leader>6'
+let g:gcc_release_key_board = '<Leader>7'
+let g:gcc_back_last_pos = '<Leader>8'
+let g:gcc_comfirm_or_continue = '$'
 ```
-
