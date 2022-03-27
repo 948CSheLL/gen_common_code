@@ -27,10 +27,10 @@ endfunction
 
 function! s:InitGetUserPrompt() abort
   let s:secret_user_prompt = ''
-  for keyboard in s:keyboard_pick_list
+  for keyboard in g:gcc_keyboard_pick_list
     if keyboard =~# '^\a'
       call s:ExecuteMap(6, keyboard)
-    elseif keyboard ==# ':'
+    elseif keyboard ==# g:gcc_comfirm_or_continue
       call s:ExecuteMap(7, keyboard)
     endif
   endfor
@@ -40,10 +40,10 @@ function! s:DeleteGetUserPrompt() abort
   if exists('s:secret_user_prompt')
     unlet s:secret_user_prompt
   endif
-  for keyboard in s:keyboard_pick_list
+  for keyboard in g:gcc_keyboard_pick_list
     if keyboard =~# '^\a'
       call s:Iunmap(keyboard)
-    elseif keyboard ==# ':'
+    elseif keyboard ==# g:gcc_comfirm_or_continue
       call s:Iunmap(keyboard)
     endif
   endfor
@@ -123,11 +123,11 @@ function! s:InitVariable() abort
   let s:next_char = ''
   let s:save_keyboard_oper = {}
   let s:pair_right_indent = 0
-  for keyboard in s:keyboard_ban_list
+  for keyboard in g:gcc_keyboard_ban_list
     call s:ExecuteMap(10, keyboard)
   endfor
-  for keyboard in s:keyboard_pick_list
-    if keyboard ==# ':'
+  for keyboard in g:gcc_keyboard_pick_list
+    if keyboard ==# g:gcc_comfirm_or_continue
       call s:ExecuteMap(0, keyboard)
     else
       call s:ExecuteMap(1, keyboard)
@@ -147,10 +147,10 @@ function! s:DeleteVariable() abort
     unlet s:save_keyboard_oper
     unlet s:pair_right_indent
   endif
-  for keyboard in s:keyboard_pick_list
+  for keyboard in g:gcc_keyboard_pick_list
     call s:ExecuteMap(8, keyboard)
   endfor
-  for keyboard in s:keyboard_ban_list
+  for keyboard in g:gcc_keyboard_ban_list
     call s:Iunmap(keyboard)
   endfor
 endfunction
@@ -174,10 +174,10 @@ function! s:LockKeyBoard() abort
 endfunction
 
 function! s:ReleaseKeyBoard() abort
-  for keyboard in s:keyboard_pick_list
+  for keyboard in g:gcc_keyboard_pick_list
     call s:Iunmap(keyboard)
   endfor
-  for keyboard in s:keyboard_ban_list
+  for keyboard in g:gcc_keyboard_ban_list
     call s:Iunmap(keyboard)
   endfor
   if !exists('s:algorithm')
@@ -449,7 +449,7 @@ function! s:DecideNextOper() abort
   if !exists('s:algorithm')
     return
   endif
-  for keyboard in s:keyboard_pick_list
+  for keyboard in g:gcc_keyboard_pick_list
     if s:Is_valid_pair_left(s:next_char)
       call s:ExecuteMap(2, keyboard)
     elseif s:next_char ==# "\n" && !empty(get(s:pairs, s:TopStack()[0], ''))
@@ -468,11 +468,11 @@ function! s:BeforeHandlePairs() abort
   if !exists('s:algorithm')
     return
   endif
-  for keyboard in s:keyboard_ban_list
+  for keyboard in g:gcc_keyboard_ban_list
     call s:ExecuteMap(10, keyboard)
   endfor
-  for keyboard in s:keyboard_pick_list
-    if keyboard ==# ':'
+  for keyboard in g:gcc_keyboard_pick_list
+    if keyboard ==# g:gcc_comfirm_or_continue
       call s:ExecuteMap(0, keyboard)
     else
       call s:ExecuteMap(1, keyboard)
@@ -555,8 +555,8 @@ function! s:BackslashBanKeyboard()
   if !exists('s:algorithm')
     return
   endif
-  for keyboard in s:keyboard_pick_list
-    if keyboard ==# ':'
+  for keyboard in g:gcc_keyboard_pick_list
+    if keyboard ==# g:gcc_comfirm_or_continue
       execute 'inoremap <silent> ' . keyboard . ' <C-r>=<SID>RecoverKeyboard()<CR>'
     else
       execute 'inoremap <silent> ' . keyboard . ' <NOP>'
@@ -839,15 +839,19 @@ let s:GenerateOper = [
       \ ['inoremap <silent> ', ' <C-r>=<SID>GenerateAlgorithm(0)<CR><C-r>=<SID>SetBackslashNPos()<CR><C-r>=<SID>SetLastPos()<CR>'],
       \ ['inoremap <silent> ', ' <NOP>'], ]
 " except '|'
-let s:keyboard_ban_list = ['<BS>', '<TAB>', '<CR>', '<SPACE>', ]
-let s:keyboard_pick_list = [
-      \ 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 
-      \ 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 
-      \ 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 
-      \ 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '[', ']', '{', '}', 
-      \ '1', '!', '2', '@', '3', '#', '4', '$', '5', '%', '6', '^', '7', '&', 
-      \ '\', ';', ':', '''', '"', ',', '<', '.', '>', '/', '?', '`', '~', 
-      \ '8', '*', '9', '(', '0', ')', '-', '_', '=', '+', ]
+if !exists('g:gcc_keyboard_ban_list')
+  let g:gcc_keyboard_ban_list = ['<BS>', '<TAB>', '<CR>', '<SPACE>', ]
+endif
+if !exists('g:gcc_keyboard_pick_list')
+  let g:gcc_keyboard_pick_list = [
+        \ 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 
+        \ 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 
+        \ 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 
+        \ 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '[', ']', '{', '}', 
+        \ '1', '!', '2', '@', '3', '#', '4', '$', '5', '%', '6', '^', '7', '&', 
+        \ '\', ';', ':', '''', '"', ',', '<', '.', '>', '/', '?', '`', '~', 
+        \ '8', '*', '9', '(', '0', ')', '-', '_', '=', '+', ]
+endif
 let s:third_part_path = s:GetThirdPartPath()
 let s:filetype_suffix = {
       \ 'c': 'c', 
@@ -855,25 +859,75 @@ let s:filetype_suffix = {
       \ 'java': 'java', 
       \ 'python': 'py', 
       \ }
+if !exists('g:gcc_exchange_algorithm_path')
+  let g:gcc_exchange_algorithm_path = '<F5>'
+endif
+if !exists('g:gcc_back_last_pos')
+  let g:gcc_back_last_pos = '<F8>'
+endif
+if !exists('g:gcc_find_file')
+  let g:gcc_find_file = '<F6>'
+endif
+if !exists('g:gcc_release_key_board')
+  let g:gcc_release_key_board = '<F7>'
+endif
+if !exists('g:gcc_search_algorithm')
+  let g:gcc_search_algorithm = '<F1>'
+endif
+if !exists('g:gcc_rename_algorithm')
+  let g:gcc_rename_algorithm = '<F2>'
+endif
+if !exists('g:gcc_remove_algorithm')
+  let g:gcc_remove_algorithm = '<F3>'
+endif
+if !exists('g:gcc_display_algorithm')
+  let g:gcc_display_algorithm = '<F4>'
+endif
+if !exists('g:gcc_comfirm_or_continue')
+  let g:gcc_comfirm_or_continue = ':'
+endif
 
 call s:UpdateAlgorithmList()
 
 augroup gen_algorithm
   autocmd!
-  autocmd FileType c,cpp,python,java 
-	\ noremap <silent> <Plug>gen_algorithmFindFile :<C-u>call <SID>BeginGetUserPrompt()<CR>i
-  autocmd FileType c,cpp,python,java 
-	\ noremap <silent> <Plug>gen_algorithmSearchAlgorithm :<C-u>call <SID>SearchAlgorithm()<CR>
-  autocmd FileType c,cpp,python,java 
-	\ noremap <silent> <Plug>gen_algorithmRemoveAlgorithm :<C-u>call <SID>RemoveAlgorithm()<CR>
-  autocmd FileType c,cpp,python,java 
-	\ noremap <silent> <Plug>gen_algorithmRenameAlgorithm :<C-u>call <SID>RenameAlgorithm()<CR>
-  autocmd FileType c,cpp,python,java 
-	\ noremap <silent> <Plug>gen_algorithmDisplayAlgorithm :<C-u>call <SID>DisplayAlgorithmList()<CR>
-  autocmd FileType c,cpp,python,java 
-	\ noremap <silent> <Plug>gen_algorithmBackToLastPos :<C-u>call <SID>BackToLastPos()<CR>a
-  autocmd FileType c,cpp,python,java 
-	\ noremap <silent> <Plug>gen_algorithmExchangeAlgorithmPath :<C-u>call <SID>ExchangeAlgorithmPath()<CR>
-  autocmd FileType c,cpp,python,java 
-	\ noremap <silent> <Plug>gen_algorithmReleaseKeyBoard <C-r>=<SID>ReleaseKeyBoard()<CR>
+  execute 'autocmd FileType ' . join(keys(s:filetype_suffix), ',') . 
+        \ ' noremap <silent> <Plug>gen_algorithmFindFile :<C-u>call <SID>BeginGetUserPrompt()<CR>i'
+  execute 'autocmd FileType ' . join(keys(s:filetype_suffix), ',') . 
+        \ ' noremap <silent> <Plug>gen_algorithmSearchAlgorithm :<C-u>call <SID>SearchAlgorithm()<CR>'
+  execute 'autocmd FileType ' . join(keys(s:filetype_suffix), ',') . 
+        \ ' noremap <silent> <Plug>gen_algorithmRemoveAlgorithm :<C-u>call <SID>RemoveAlgorithm()<CR>'
+  execute 'autocmd FileType ' . join(keys(s:filetype_suffix), ',') . 
+        \ ' noremap <silent> <Plug>gen_algorithmRenameAlgorithm :<C-u>call <SID>RenameAlgorithm()<CR>'
+  execute 'autocmd FileType ' . join(keys(s:filetype_suffix), ',') . 
+        \ ' noremap <silent> <Plug>gen_algorithmDisplayAlgorithm :<C-u>call <SID>DisplayAlgorithmList()<CR>'
+  execute 'autocmd FileType ' . join(keys(s:filetype_suffix), ',') . 
+        \ ' noremap <silent> <Plug>gen_algorithmBackToLastPos :<C-u>call <SID>BackToLastPos()<CR>a'
+  execute 'autocmd FileType ' . join(keys(s:filetype_suffix), ',') . 
+        \ ' noremap <silent> <Plug>gen_algorithmExchangeAlgorithmPath :<C-u>call <SID>ExchangeAlgorithmPath()<CR>'
+  execute 'autocmd FileType ' . join(keys(s:filetype_suffix), ',') . 
+        \ ' noremap <silent> <Plug>gen_algorithmReleaseKeyBoard <C-r>=<SID>ReleaseKeyBoard()<CR>'
+
+  execute 'autocmd VimEnter,FileType ' . join(keys(s:filetype_suffix), ',') . 
+        \ ' nmap <silent> ' . g:gcc_exchange_algorithm_path . ' <Plug>gen_algorithmExchangeAlgorithmPath'
+  execute 'autocmd VimEnter,FileType ' . join(keys(s:filetype_suffix), ',') . 
+        \ ' imap <silent> ' . g:gcc_exchange_algorithm_path . ' <ESC><Plug>gen_algorithmExchangeAlgorithmPath'
+  execute 'autocmd VimEnter,FileType ' . join(keys(s:filetype_suffix), ',') . 
+        \ ' nmap <silent> ' . g:gcc_back_last_pos . ' <Plug>gen_algorithmBackToLastPos'
+  execute 'autocmd VimEnter,FileType ' . join(keys(s:filetype_suffix), ',') . 
+        \ ' imap <silent> ' . g:gcc_back_last_pos . ' <ESC><Plug>gen_algorithmBackToLastPos'
+  execute 'autocmd VimEnter,FileType ' . join(keys(s:filetype_suffix), ',') . 
+        \ ' nmap <silent> ' . g:gcc_find_file . ' <Plug>gen_algorithmFindFile'
+  execute 'autocmd VimEnter,FileType ' . join(keys(s:filetype_suffix), ',') . 
+        \ ' imap <silent> ' . g:gcc_find_file . ' <ESC><Plug>gen_algorithmFindFile'
+  execute 'autocmd VimEnter,FileType ' . join(keys(s:filetype_suffix), ',') . 
+        \ ' imap <silent> ' . g:gcc_release_key_board . ' <Plug>gen_algorithmReleaseKeyBoard<ESC>'
+  execute 'autocmd VimEnter,FileType ' . join(keys(s:filetype_suffix), ',') . 
+        \ ' nmap <silent> ' . g:gcc_search_algorithm . ' <Plug>gen_algorithmSearchAlgorithm'
+  execute 'autocmd VimEnter,FileType ' . join(keys(s:filetype_suffix), ',') . 
+        \ ' nmap <silent> ' . g:gcc_rename_algorithm . ' <Plug>gen_algorithmRenameAlgorithm'
+  execute 'autocmd VimEnter,FileType ' . join(keys(s:filetype_suffix), ',') . 
+        \ ' nmap <silent> ' . g:gcc_remove_algorithm . ' <Plug>gen_algorithmRemoveAlgorithm'
+  execute 'autocmd VimEnter,FileType ' . join(keys(s:filetype_suffix), ',') . 
+        \ ' nmap <silent> ' . g:gcc_display_algorithm . ' <Plug>gen_algorithmDisplayAlgorithm'
 augroup END
