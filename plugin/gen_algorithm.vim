@@ -159,6 +159,7 @@ function! s:PasteAlgorithm() abort
   if !s:GetAlgorithmCode()
     return
   endif
+  execute 'normal! `<d`>'
   let [save_reg_content, save_reg_type] = [getreg(v:register), getregtype(v:register)]
   call setreg(v:register, s:algorithm, 'l')
   exe 'normal! "' . v:register . 'p'
@@ -933,7 +934,7 @@ augroup gen_algorithm
   execute 'autocmd FileType ' . join(keys(s:filetype_suffix), ',') . 
         \ ' noremap <silent> <Plug>gen_algorithmReleaseKeyBoard <C-r>=<SID>ReleaseKeyBoard()<CR>'
   execute 'autocmd FileType ' . join(keys(s:filetype_suffix), ',') . 
-        \ ' noremap <silent> <Plug>gen_algorithmPasteAlgorithm :<C-u>''<,''>d<CR>:<C-u>call <SID>PasteAlgorithm()<CR>i'
+        \ ' noremap <silent> <Plug>gen_algorithmPasteAlgorithm <ESC>:<C-u>call <SID>PasteAlgorithm()<CR>i'
 
   execute 'autocmd VimEnter,FileType ' . join(keys(s:filetype_suffix), ',') . 
         \ ' nmap <silent> ' . g:gcc_exchange_algorithm_path . ' <Plug>gen_algorithmExchangeAlgorithmPath'
