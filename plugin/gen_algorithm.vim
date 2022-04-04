@@ -194,9 +194,9 @@ function! s:ReleaseKeyBoard() abort
     call s:Iunmap(keyboard)
   endfor
   if !exists('s:algorithm')
-    return " \b"
+    return
   endif
-  return " \b"
+  return
 endfunction
 
 function! s:BackToLastPos() abort
@@ -932,24 +932,18 @@ augroup gen_algorithm
   execute 'autocmd FileType ' . join(keys(s:filetype_suffix), ',') . 
         \ ' noremap <silent> <Plug>gen_algorithmExchangeAlgorithmPath :<C-u>call <SID>ExchangeAlgorithmPath()<CR>'
   execute 'autocmd FileType ' . join(keys(s:filetype_suffix), ',') . 
-        \ ' noremap <silent> <Plug>gen_algorithmReleaseKeyBoard <C-r>=<SID>ReleaseKeyBoard()<CR>'
+        \ ' noremap <silent> <Plug>gen_algorithmReleaseKeyBoard :<C-u>call <SID>ReleaseKeyBoard()<CR>'
   execute 'autocmd FileType ' . join(keys(s:filetype_suffix), ',') . 
         \ ' noremap <silent> <Plug>gen_algorithmPasteAlgorithm :<C-u>call <SID>PasteAlgorithm()<CR>'
 
   execute 'autocmd VimEnter,FileType ' . join(keys(s:filetype_suffix), ',') . 
         \ ' nmap <silent> ' . g:gcc_exchange_algorithm_path . ' <Plug>gen_algorithmExchangeAlgorithmPath'
   execute 'autocmd VimEnter,FileType ' . join(keys(s:filetype_suffix), ',') . 
-        \ ' imap <silent> ' . g:gcc_exchange_algorithm_path . ' <ESC><Plug>gen_algorithmExchangeAlgorithmPath'
-  execute 'autocmd VimEnter,FileType ' . join(keys(s:filetype_suffix), ',') . 
         \ ' nmap <silent> ' . g:gcc_back_last_pos . ' <Plug>gen_algorithmBackToLastPos'
-  execute 'autocmd VimEnter,FileType ' . join(keys(s:filetype_suffix), ',') . 
-        \ ' imap <silent> ' . g:gcc_back_last_pos . ' <ESC><Plug>gen_algorithmBackToLastPos'
   execute 'autocmd VimEnter,FileType ' . join(keys(s:filetype_suffix), ',') . 
         \ ' nmap <silent> ' . g:gcc_find_file . ' <Plug>gen_algorithmFindFile'
   execute 'autocmd VimEnter,FileType ' . join(keys(s:filetype_suffix), ',') . 
-        \ ' imap <silent> ' . g:gcc_find_file . ' <ESC><Plug>gen_algorithmFindFile'
-  execute 'autocmd VimEnter,FileType ' . join(keys(s:filetype_suffix), ',') . 
-        \ ' imap <silent> ' . g:gcc_release_key_board . ' <Plug>gen_algorithmReleaseKeyBoard<ESC>'
+        \ ' nmap <silent> ' . g:gcc_release_key_board . ' <Plug>gen_algorithmReleaseKeyBoard'
   execute 'autocmd VimEnter,FileType ' . join(keys(s:filetype_suffix), ',') . 
         \ ' nmap <silent> ' . g:gcc_search_algorithm . ' <Plug>gen_algorithmSearchAlgorithm'
   execute 'autocmd VimEnter,FileType ' . join(keys(s:filetype_suffix), ',') . 
