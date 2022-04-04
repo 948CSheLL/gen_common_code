@@ -3,9 +3,9 @@ if exists("g:loaded_algorithm") || &cp || v:version < 800
 endif
 let g:loaded_algorithm = 1
 
-function! s:Iunmap(mapping) abort
+function! s:DeleteMap(cmd, mapping) abort
   try
-    execute 'iunmap ' . a:mapping
+    execute a:cmd . ' ' . a:mapping
   catch "E31.*"
     return
   endtry
@@ -42,9 +42,9 @@ function! s:DeleteGetUserPrompt() abort
   endif
   for keyboard in g:gcc_keyboard_pick_list
     if keyboard =~# '^\a'
-      call s:Iunmap(keyboard)
+      call s:DeleteMap('iunmap', keyboard)
     elseif keyboard ==# g:gcc_comfirm_or_continue
-      call s:Iunmap(keyboard)
+      call s:DeleteMap('iunmap', keyboard)
     endif
   endfor
 endfunction
@@ -133,6 +133,9 @@ function! s:InitVariable() abort
       call s:ExecuteMap(1, keyboard)
     endif
   endfor
+  execute 'nmap <silent> ' . g:gcc_back_last_pos . ' <Plug>gen_algorithmBackToLastPos'
+  execute 'nmap <silent> ' . g:gcc_release_key_board . ' <Plug>gen_algorithmReleaseKeyBoard'
+  execute 'vmap <silent> ' . g:gcc_paste_algorithm . ' <Plug>gen_algorithmPasteAlgorithm'
 endfunction
 
 function! s:DeleteVariable() abort
@@ -151,8 +154,11 @@ function! s:DeleteVariable() abort
     call s:ExecuteMap(8, keyboard)
   endfor
   for keyboard in g:gcc_keyboard_ban_list
-    call s:Iunmap(keyboard)
+    call s:DeleteMap('iunmap', keyboard)
   endfor
+  call s:DeleteMap('nunmap', g:gcc_back_last_pos)
+  call s:DeleteMap('nunmap', g:gcc_release_key_board)
+  call s:DeleteMap('vunmap', g:gcc_paste_algorithm)
 endfunction
 
 function! s:PasteAlgorithm() abort
@@ -188,10 +194,10 @@ endfunction
 
 function! s:ReleaseKeyBoard() abort
   for keyboard in g:gcc_keyboard_pick_list
-    call s:Iunmap(keyboard)
+    call s:DeleteMap('iunmap', keyboard)
   endfor
   for keyboard in g:gcc_keyboard_ban_list
-    call s:Iunmap(keyboard)
+    call s:DeleteMap('iunmap', keyboard)
   endfor
   if !exists('s:algorithm')
     return
@@ -206,10 +212,12 @@ function! s:BackToLastPos() abort
   endif
   if exists('s:algorithm')
     call s:LockKeyBoard()
-    if !empty(get(s:pairs, s:TopStack()[0], ''))
-      call cursor(s:last_pos[0], s:last_pos[1] - 1)
-    else
-      call cursor(s:last_pos[0], s:last_pos[1])
+    if !empty(s:last_pos)
+      if !empty(get(s:pairs, s:TopStack()[0], ''))
+        call cursor(s:last_pos[0], s:last_pos[1] - 1)
+      else
+        call cursor(s:last_pos[0], s:last_pos[1])
+      endif
     endif
   endif
 endfunction
@@ -937,14 +945,6 @@ augroup gen_algorithm
         \ ' noremap <silent> <Plug>gen_algorithmPasteAlgorithm :<C-u>call <SID>PasteAlgorithm()<CR>'
 
   execute 'autocmd VimEnter,FileType ' . join(keys(s:filetype_suffix), ',') . 
-        \ ' nmap <silent> ' . g:gcc_exchange_algorithm_path . ' <Plug>gen_algorithmExchangeAlgorithmPath'
-  execute 'autocmd VimEnter,FileType ' . join(keys(s:filetype_suffix), ',') . 
-        \ ' nmap <silent> ' . g:gcc_back_last_pos . ' <Plug>gen_algorithmBackToLastPos'
-  execute 'autocmd VimEnter,FileType ' . join(keys(s:filetype_suffix), ',') . 
-        \ ' nmap <silent> ' . g:gcc_find_file . ' <Plug>gen_algorithmFindFile'
-  execute 'autocmd VimEnter,FileType ' . join(keys(s:filetype_suffix), ',') . 
-        \ ' nmap <silent> ' . g:gcc_release_key_board . ' <Plug>gen_algorithmReleaseKeyBoard'
-  execute 'autocmd VimEnter,FileType ' . join(keys(s:filetype_suffix), ',') . 
         \ ' nmap <silent> ' . g:gcc_search_algorithm . ' <Plug>gen_algorithmSearchAlgorithm'
   execute 'autocmd VimEnter,FileType ' . join(keys(s:filetype_suffix), ',') . 
         \ ' nmap <silent> ' . g:gcc_rename_algorithm . ' <Plug>gen_algorithmRenameAlgorithm'
@@ -953,5 +953,7 @@ augroup gen_algorithm
   execute 'autocmd VimEnter,FileType ' . join(keys(s:filetype_suffix), ',') . 
         \ ' nmap <silent> ' . g:gcc_display_algorithm . ' <Plug>gen_algorithmDisplayAlgorithm'
   execute 'autocmd VimEnter,FileType ' . join(keys(s:filetype_suffix), ',') . 
-        \ ' vmap <silent> ' . g:gcc_paste_algorithm . ' <Plug>gen_algorithmPasteAlgorithm'
+        \ ' nmap <silent> ' . g:gcc_exchange_algorithm_path . ' <Plug>gen_algorithmExchangeAlgorithmPath'
+  execute 'autocmd VimEnter,FileType ' . join(keys(s:filetype_suffix), ',') . 
+        \ ' nmap <silent> ' . g:gcc_find_file . ' <Plug>gen_algorithmFindFile'
 augroup END
