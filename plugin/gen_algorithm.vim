@@ -90,6 +90,10 @@ function! s:FindFile(secret_user_prompt) abort
     return
   endif
   call s:InitVariable()
+  if algorithm_name ==# 'help'
+    let s:algorithm_file = algorithm_name
+    return
+  endif
   let temp = algorithm_name
   let algorithm_name = ''
   for char in temp
@@ -106,7 +110,21 @@ function! s:FindFile(secret_user_prompt) abort
 endfunction
 
 function! s:FindAlgorithm() abort
-  if !empty(s:algorithm_file) && !isdirectory(s:algorithm_file)
+  if empty(s:algorithm_file) 
+    let s:algorithm = ''
+    return
+  endif
+  if s:algorithm_file ==# 'help'
+    let echo_path = fnamemodify(s:third_part_path, ':h') . '/my_echo'
+    let save_cwd = getcwd()
+    call chdir(echo_path)
+    if isdirectory(echo_path) 
+          \ && !empty(findfile('client', echo_path))
+      let s:algorithm = system('./client ' . g:gcc_echo_remote_server_host
+            \ . ' ' . g:gcc_echo_remote_server_port)
+    endif
+    call chdir(save_cwd)
+  elseif !isdirectory(s:algorithm_file)
     let s:algorithm = system('cat ' .  s:algorithm_file)
   else
     let s:algorithm = ''
@@ -607,6 +625,7 @@ function! s:GetAlgorithmCode() abort
   if empty(s:algorithm)
     call s:FindAlgorithm()
     if empty(s:algorithm)
+      call s:DeleteVariable()
       redraw!
       return 0
     endif
@@ -815,6 +834,10 @@ function! s:SearchAlgorithm() abort
   while empty(user_input)
     let user_input = input('Please input a valid string: ')
   endwhile
+  if user_input ==# 'help'
+    execute 'vsplit ' . s:third_part_path . '/' . g:gcc_echo_local_server_filename
+    return
+  endif
   let algorithm_name = s:GetAlgorithmName(user_input)
   let find_result = get(s:algorithm_list, algorithm_name, '')
   if empty(find_result)
@@ -845,6 +868,27 @@ function! s:SearchAlgorithm() abort
     endif
     execute 'vsplit ' . file_name
   endif
+endfunction
+
+function! s:ConfigEcho() abort
+  let echo_path = fnamemodify(s:third_part_path, ':h') . '/my_echo'
+  if empty(findfile(g:gcc_echo_local_server_filename, s:third_part_path))
+    call system('touch ' . s:third_part_path . '/' . g:gcc_echo_local_server_filename)
+  endif
+  let save_cwd = getcwd()
+  call chdir(echo_path)
+  if isdirectory(echo_path) 
+        \ && (empty(findfile('client', echo_path)) 
+        \ || empty(findfile('server', echo_path)))
+    call system('make')
+  endif
+  if isdirectory(echo_path) 
+        \ && !empty(findfile('server', echo_path))
+    call system('./server ' . g:gcc_echo_local_server_port
+          \ . ' ' . s:third_part_path . '/' . g:gcc_echo_local_server_filename . ' &')
+  endif
+  call chdir(save_cwd)
+  return echo_path
 endfunction
 
 let s:is_algorithm_update = 0
@@ -920,6 +964,18 @@ endif
 if !exists('g:gcc_comfirm_or_continue')
   let g:gcc_comfirm_or_continue = ':'
 endif
+if !exists('g:gcc_echo_local_server_port')
+  let g:gcc_echo_local_server_port = '9497'
+endif
+if !exists('g:gcc_echo_local_server_filename')
+  let g:gcc_echo_local_server_filename = 'tmp9497'
+endif
+if !exists('g:gcc_echo_remote_server_host')
+  let g:gcc_echo_remote_server_host = '127.0.0.1'
+endif
+if !exists('g:gcc_echo_remote_server_port')
+  let g:gcc_echo_remote_server_port = '9497'
+endif
 
 call s:UpdateAlgorithmList()
 
@@ -956,4 +1012,7 @@ augroup gen_algorithm
         \ ' nmap <silent> ' . g:gcc_exchange_algorithm_path . ' <Plug>gen_algorithmExchangeAlgorithmPath'
   execute 'autocmd VimEnter,FileType ' . join(keys(s:filetype_suffix), ',') . 
         \ ' nmap <silent> ' . g:gcc_find_file . ' <Plug>gen_algorithmFindFile'
+
+  execute 'autocmd VimEnter,FileType ' . join(keys(s:filetype_suffix), ',') . 
+        \ ' let s:my_echo_path = s:ConfigEcho()'
 augroup END

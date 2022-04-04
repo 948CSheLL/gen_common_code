@@ -37,4 +37,8 @@ let g:gcc_release_key_board = '<Leader>7'
 let g:gcc_back_last_pos = '<Leader>8'
 let g:gcc_paste_algorithm = '<Leader>9'
 let g:gcc_comfirm_or_continue = '$'
+let g:gcc_echo_local_server_port = '9497'
+let g:gcc_echo_local_server_filename = 'tmp9497'
+let g:gcc_echo_remote_server_host = '127.0.0.1'
+let g:gcc_echo_remote_server_port = '9497'
 ```
