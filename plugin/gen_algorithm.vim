@@ -887,6 +887,9 @@ endif
 if !exists('g:gcc_back_last_pos')
   let g:gcc_back_last_pos = '<F8>'
 endif
+if !exists('g:gcc_paste_algorithm')
+  let g:gcc_paste_algorithm = '<F9>'
+endif
 if !exists('g:gcc_find_file')
   let g:gcc_find_file = '<F6>'
 endif
