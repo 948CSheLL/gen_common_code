@@ -155,6 +155,18 @@ function! s:DeleteVariable() abort
   endfor
 endfunction
 
+function! s:PasteAlgorithm() abort
+  if !s:GetAlgorithmCode()
+    return
+  endif
+  let [save_reg_content, save_reg_type] = [getreg(v:register), getregtype(v:register)]
+  call setreg(v:register, s:algorithm, 'l')
+  exe 'normal! "' . v:register . 'p'
+  call setreg(v:register, save_reg_content, save_reg_type)
+  call s:DeleteVariable()
+  redraw!
+endfunction
+
 function! s:RecoverKeyboard() abort
   if !exists('s:algorithm')
     return " \b"
@@ -579,13 +591,23 @@ function! s:SetLastPos() abort
   return " \b"
 endfunction
 
-function! s:GenerateAlgorithm(press_tab) abort
+function! s:GetAlgorithmCode() abort
+  if !exists('s:algorithm')
+    return 0
+  endif
   if empty(s:algorithm)
     call s:FindAlgorithm()
     if empty(s:algorithm)
       redraw!
-      return " \b"
+      return 0
     endif
+  endif
+  return 1
+endfunction
+
+function! s:GenerateAlgorithm(press_tab) abort
+  if !s:GetAlgorithmCode()
+    return " \b"
   endif
   let s:current_char = s:algorithm[s:index]
   let result = ''
@@ -907,6 +929,8 @@ augroup gen_algorithm
         \ ' noremap <silent> <Plug>gen_algorithmExchangeAlgorithmPath :<C-u>call <SID>ExchangeAlgorithmPath()<CR>'
   execute 'autocmd FileType ' . join(keys(s:filetype_suffix), ',') . 
         \ ' noremap <silent> <Plug>gen_algorithmReleaseKeyBoard <C-r>=<SID>ReleaseKeyBoard()<CR>'
+  execute 'autocmd FileType ' . join(keys(s:filetype_suffix), ',') . 
+        \ ' noremap <silent> <Plug>gen_algorithmPasteAlgorithm :<C-u>''<,''>d<CR>:<C-u>call <SID>PasteAlgorithm()<CR>i'
 
   execute 'autocmd VimEnter,FileType ' . join(keys(s:filetype_suffix), ',') . 
         \ ' nmap <silent> ' . g:gcc_exchange_algorithm_path . ' <Plug>gen_algorithmExchangeAlgorithmPath'
@@ -930,4 +954,6 @@ augroup gen_algorithm
         \ ' nmap <silent> ' . g:gcc_remove_algorithm . ' <Plug>gen_algorithmRemoveAlgorithm'
   execute 'autocmd VimEnter,FileType ' . join(keys(s:filetype_suffix), ',') . 
         \ ' nmap <silent> ' . g:gcc_display_algorithm . ' <Plug>gen_algorithmDisplayAlgorithm'
+  execute 'autocmd VimEnter,FileType ' . join(keys(s:filetype_suffix), ',') . 
+        \ ' vmap <silent> ' . g:gcc_paste_algorithm . ' <Plug>gen_algorithmPasteAlgorithm'
 augroup END

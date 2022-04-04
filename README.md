@@ -35,5 +35,6 @@ let g:gcc_exchange_algorithm_path = '<Leader>5'
 let g:gcc_find_file = '<Leader>6'
 let g:gcc_release_key_board = '<Leader>7'
 let g:gcc_back_last_pos = '<Leader>8'
+let g:gcc_paste_algorithm = '<Leader>9'
 let g:gcc_comfirm_or_continue = '$'
 ```
