@@ -13,7 +13,15 @@ A vim plugin. Help generate algorithm templates during the interview process.
 - minpac
   - `call minpac#add('948CSheLL/gen_common_code')`
 
+## Requirements
+
+- python version 3.0+
+- `pip3 install requests`
+- `pip3 install click`
+- `pip3 install lxml`
+
 ## Mappings
+
 Add following configuration to your `.vimrc`:
 
 ```
