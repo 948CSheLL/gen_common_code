@@ -20,15 +20,10 @@ function! s:ExecuteMap(map_index, join_string) abort
   return mapping
 endfunction
 
-function! s:GetAlgorithmName(name) abort
-  let name = join(split(substitute(a:name, '\A', ' ', 'g'), ' '), '')
-  return name
-endfunction
-
 function! s:InitGetUserPrompt() abort
   let s:secret_user_prompt = ''
   for keyboard in g:gcc_keyboard_pick_list
-    if keyboard =~# '^\a'
+    if keyboard =~# '^\w'
       call s:ExecuteMap(6, keyboard)
     elseif keyboard ==# g:gcc_comfirm_or_continue
       call s:ExecuteMap(7, keyboard)
@@ -41,7 +36,7 @@ function! s:DeleteGetUserPrompt() abort
     unlet s:secret_user_prompt
   endif
   for keyboard in g:gcc_keyboard_pick_list
-    if keyboard =~# '^\a'
+    if keyboard =~# '^\w'
       call s:DeleteMap('iunmap', keyboard)
     elseif keyboard ==# g:gcc_comfirm_or_continue
       call s:DeleteMap('iunmap', keyboard)
@@ -50,10 +45,6 @@ function! s:DeleteGetUserPrompt() abort
 endfunction
 
 function! s:BeginGetUserPrompt() abort
-  if !exists('s:is_algorithm_code_exist')
-    call s:ExchangeAlgorithmPath()
-    return
-  endif
   call s:DeleteGetUserPrompt()
   call s:InitGetUserPrompt()
 endfunction
@@ -73,66 +64,27 @@ function! s:GettedUserPrompt() abort
     let user_input = ''
   endif
   call s:DeleteGetUserPrompt()
-  call s:FindFile(user_input)
+  call s:FindAlgorithm(user_input)
   return " \b"
 endfunction
 
-function! s:FindFile(secret_user_prompt) abort
-  if s:is_algorithm_update
-    let s:is_algorithm_update = 0
-    call s:UpdateAlgorithmList()
-  endif
+function! s:FindAlgorithm(secret_user_prompt) abort
   call s:DeleteVariable()
-  let user_input = a:secret_user_prompt
-  let algorithm_name = s:GetAlgorithmName(user_input)
-  if empty(algorithm_name)
-    call s:DeleteVariable()
+  if empty(a:secret_user_prompt)
     return
   endif
   call s:InitVariable()
-  if algorithm_name ==# 'help'
-    let s:algorithm_file = algorithm_name
-    return
+  let s:algorithm = system('python3 ' . s:plugin_path . '/get.py --suffix=' .  a:secret_user_prompt)
+  redraw!
+  if s:algorithm =~? '.*None.*'
+    let s:algorithm = ''
   endif
-  let temp = algorithm_name
-  let algorithm_name = ''
-  for char in temp
-    let algorithm_name = algorithm_name . char . '*'
-  endfor
-  let s:algorithm_file = get(split(glob(
-        \ s:third_part_path . '/algorithm_code/' . algorithm_name . '/' . 
-        \ &filetype . '/*.' . s:filetype_suffix[&filetype]), "\n"), 0, '')
-  if empty(s:algorithm_file)
+  if empty(s:algorithm)
     call s:DeleteVariable()
-    return
-  endif
-  let s:algorithm_file = fnamemodify(s:algorithm_file, ":p")
-endfunction
-
-function! s:FindAlgorithm() abort
-  if empty(s:algorithm_file) 
-    let s:algorithm = ''
-    return
-  endif
-  if s:algorithm_file ==# 'help'
-    let echo_path = fnamemodify(s:third_part_path, ':h') . '/my_echo'
-    let save_cwd = getcwd()
-    call chdir(echo_path)
-    if isdirectory(echo_path) 
-          \ && !empty(findfile('client', echo_path))
-      let s:algorithm = system('./client ' . g:gcc_echo_remote_server_host
-            \ . ' ' . g:gcc_echo_remote_server_port)
-    endif
-    call chdir(save_cwd)
-  elseif !isdirectory(s:algorithm_file)
-    let s:algorithm = system('cat ' .  s:algorithm_file)
-  else
-    let s:algorithm = ''
   endif
 endfunction
 
 function! s:InitVariable() abort
-  let s:algorithm_file = ''
   let s:algorithm = ''
   let s:index = 0
   let s:last_pos = []
@@ -158,7 +110,6 @@ endfunction
 
 function! s:DeleteVariable() abort
   if exists('s:algorithm')
-    unlet s:algorithm_file
     unlet s:algorithm
     unlet s:index
     unlet s:last_pos
@@ -180,7 +131,7 @@ function! s:DeleteVariable() abort
 endfunction
 
 function! s:PasteAlgorithm() abort
-  if !s:GetAlgorithmCode()
+  if !s:JudgeAlgorithmExists()
     return
   endif
   call deletebufline('%', line('''<'), line('''>'))
@@ -224,10 +175,6 @@ function! s:ReleaseKeyBoard() abort
 endfunction
 
 function! s:BackToLastPos() abort
-  if !exists('s:is_algorithm_code_exist')
-    call s:ExchangeAlgorithmPath()
-    return
-  endif
   if exists('s:algorithm')
     call s:LockKeyBoard()
     if !empty(s:last_pos)
@@ -618,23 +565,20 @@ function! s:SetLastPos() abort
   return " \b"
 endfunction
 
-function! s:GetAlgorithmCode() abort
+function! s:JudgeAlgorithmExists() abort
   if !exists('s:algorithm')
     return 0
   endif
   if empty(s:algorithm)
-    call s:FindAlgorithm()
-    if empty(s:algorithm)
-      call s:DeleteVariable()
-      redraw!
-      return 0
-    endif
+    call s:DeleteVariable()
+    redraw!
+    return 0
   endif
   return 1
 endfunction
 
 function! s:GenerateAlgorithm(press_tab) abort
-  if !s:GetAlgorithmCode()
+  if !s:JudgeAlgorithmExists()
     return " \b"
   endif
   let s:current_char = s:algorithm[s:index]
@@ -669,230 +613,12 @@ function! s:GenerateAlgorithm(press_tab) abort
   return result
 endfunction
 
-function! s:GetThirdPartPath() abort
+function! s:GetPluginPath() abort
   let script_file_path = expand('<sfile>')
   let plugin_path = fnamemodify(script_file_path, ":h:h")
-  let third_part_path = plugin_path . '/.third_part'
-  if !isdirectory(third_part_path)
-    call mkdir(third_part_path, 'p', 0700)
-  endif
-  return third_part_path
+  return plugin_path
 endfunction
 
-function! s:ExchangeAlgorithmPath() abort
-  if !isdirectory(s:third_part_path . '/algorithm_code')
-    let user_input = input('Algorithm code do not exist, do you want to add it? [default: yes]:')
-    if !empty(user_input) && (user_input ==? 'no' || user_input ==? 'n')
-      return
-    endif
-  else
-    let user_input = input('Algorithm code exists, do you want to exchange? [default: no]:')
-    if empty(user_input) || user_input ==? 'no' || user_input ==? 'n'
-      return
-    else
-      call delete(s:third_part_path . '/algorithm_code', "rf")
-    endif
-  endif
-  let user_input = input('Please input algorithm code path: ')
-  if empty(user_input)
-    call delete(s:third_part_path . '/algorithm_code', "rf")
-    call s:UpdateAlgorithmList()
-    redraw!
-    return
-  endif
-  while !isdirectory(fnamemodify(user_input, ":p"))
-    if exists('s:is_algorithm_code_exist')
-      unlet s:is_algorithm_code_exist
-    endif
-    let user_input = input('Please input a valid path: ')
-    if empty(user_input)
-      call delete(s:third_part_path . '/algorithm_code', "rf")
-      call s:UpdateAlgorithmList()
-      redraw!
-      return
-    endif
-  endwhile
-  call system('ln -s ' . fnamemodify(user_input, ":p") . ' ' . s:third_part_path . '/algorithm_code')
-  let s:is_algorithm_code_exist = 1
-  call s:UpdateAlgorithmList()
-  redraw!
-endfunction
-
-function! s:UpdateAlgorithmList() abort
-  if isdirectory(s:third_part_path . '/algorithm_code')
-    let s:is_algorithm_code_exist = 1
-  else
-    return
-  endif
-  let s:algorithm_list = {}
-  let full_directory_list = split(glob(s:third_part_path . '/algorithm_code/*'),"\n")
-  for full_directory_name in full_directory_list
-    if !isdirectory(full_directory_name)
-      continue
-    endif
-    let algorithm_name = s:GetAlgorithmName(fnamemodify(full_directory_name, ":t"))
-    let s:algorithm_list[algorithm_name] = {
-	  \ 'directory_name': fnamemodify(full_directory_name, ":t"), 
-	  \ 'full_directory_name': full_directory_name, 
-	  \ }
-  endfor
-endfunction
-
-function! s:DisplayAlgorithmList() abort
-  if !exists('s:is_algorithm_code_exist')
-    call s:ExchangeAlgorithmPath()
-    return
-  endif
-  if s:is_algorithm_update
-    let s:is_algorithm_update = 0
-    call s:UpdateAlgorithmList()
-  endif
-  let algorithm_names = sort(keys(s:algorithm_list))
-  for algorithm_name in algorithm_names
-    echo s:algorithm_list[algorithm_name]['directory_name']
-  endfor
-endfunction
-
-function! s:RenameAlgorithm() abort
-  if !exists('s:is_algorithm_code_exist')
-    call s:ExchangeAlgorithmPath()
-    return
-  endif
-  if s:is_algorithm_update
-    let s:is_algorithm_update = 0
-    call s:UpdateAlgorithmList()
-  endif
-  let user_input = input('Please input algorithm you want to rename: ')
-  while empty(user_input) || empty(get(s:algorithm_list, s:GetAlgorithmName(user_input), ''))
-    let user_input = input('Please input a valid string: ')
-  endwhile
-  let algorithm_name = s:GetAlgorithmName(user_input)
-  let find_result = get(s:algorithm_list, algorithm_name, '')
-  let new_name = input('Please input new name: ')
-  while empty(new_name)
-    let new_find_result = get(s:algorithm_list, s:GetAlgorithmName(new_name), '')
-    if !empty(new_find_result) && new_find_result['directory_name'] !=# new_name
-      break
-    endif
-    let new_name = input('Please input a valid string: ')
-  endwhile
-  let directory_name = s:third_part_path . '/algorithm_code/'
-  let old_algorithm_name = find_result['full_directory_name']
-  let new_algorithm_name = directory_name . new_name
-  for file_type in keys(s:filetype_suffix)
-    let old_src_filename = find_result['full_directory_name'] . '/' . file_type . '/' . algorithm_name . '.' . s:filetype_suffix[file_type]
-    let new_src_filename = find_result['full_directory_name'] . '/' . file_type . '/' . s:GetAlgorithmName(new_name) . '.' . s:filetype_suffix[file_type]
-    let old_doc_filename = find_result['full_directory_name'] . '/' . file_type . '/doc/' . algorithm_name . '.txt'
-    let new_doc_filename = find_result['full_directory_name'] . '/' . file_type . '/doc/' . s:GetAlgorithmName(new_name) . '.txt'
-    call rename(old_src_filename, new_src_filename)
-    call rename(old_doc_filename, new_doc_filename)
-  endfor
-  call rename(old_algorithm_name, new_algorithm_name)
-  let s:is_algorithm_update = 1
-endfunction
-
-function! s:RemoveAlgorithm() abort
-  if !exists('s:is_algorithm_code_exist')
-    call s:ExchangeAlgorithmPath()
-    return
-  endif
-  if s:is_algorithm_update
-    let s:is_algorithm_update = 0
-    call s:UpdateAlgorithmList()
-  endif
-  let user_input = input('Please input algorithm you want to remove: ')
-  while empty(user_input) || empty(get(s:algorithm_list, s:GetAlgorithmName(user_input), ''))
-    let user_input = input('Please input a valid string: ')
-  endwhile
-  let algorithm_name = s:GetAlgorithmName(user_input)
-  let response = input('Are you sure? [default: no]: ')
-  if !empty(response) && (response ==? 'yes' || response ==? 'y')
-    let s:is_algorithm_update = 1
-    let find_result = get(s:algorithm_list, algorithm_name, '')
-    if !empty(find_result)
-      call delete(find_result['full_directory_name'], "rf")
-    endif
-  endif
-endfunction
-
-function! s:SearchAlgorithm() abort
-  if !exists('s:is_algorithm_code_exist')
-    call s:ExchangeAlgorithmPath()
-    return
-  endif
-  if s:is_algorithm_update
-    let s:is_algorithm_update = 0
-    call s:UpdateAlgorithmList()
-  endif
-  let type = input('Which file type do you want to search? [src/doc, default: src]: ')
-  if type ==? 'src' || empty(type)
-    let type = 'src'
-  else
-    let type = 'doc'
-  endif
-  let user_input = input('Please input algorithm you want to search: ')
-  while empty(user_input)
-    let user_input = input('Please input a valid string: ')
-  endwhile
-  if user_input ==# 'help'
-    execute 'vsplit ' . s:third_part_path . '/' . g:gcc_echo_local_server_filename
-    return
-  endif
-  let algorithm_name = s:GetAlgorithmName(user_input)
-  let find_result = get(s:algorithm_list, algorithm_name, '')
-  if empty(find_result)
-    let response = input('Not find algorithm ''' . user_input . ''', do you want to add it? [default: yes]: ')
-    if empty(response) || response ==? 'yes' || response ==? 'y'
-      for file_type in keys(s:filetype_suffix)
-	let directory_name = s:third_part_path . '/algorithm_code/' . user_input . "/" . file_type . "/doc"
-	call mkdir(directory_name, 'p', 0700)
-      endfor
-      call s:UpdateAlgorithmList()
-      let find_result = get(s:algorithm_list, algorithm_name, '')
-    else
-      return
-    endif
-  endif
-  if type ==# 'src'
-    let file_name = s:third_part_path . '/algorithm_code/' . find_result['directory_name'] . '/' . &filetype . '/' . algorithm_name . '.' . s:filetype_suffix[&filetype]
-    let directory_name = fnamemodify(file_name, ':h')
-    if !isdirectory(directory_name)
-      call mkdir(directory_name, 'p', 0700)
-    endif
-    execute 'vsplit ' . file_name
-  elseif type ==# 'doc'
-    let file_name = s:third_part_path . '/algorithm_code/' . find_result['directory_name'] . '/' . &filetype . '/doc/' . algorithm_name . '.txt'
-    let directory_name = fnamemodify(file_name, ':h')
-    if !isdirectory(directory_name)
-      call mkdir(directory_name, 'p', 0700)
-    endif
-    execute 'vsplit ' . file_name
-  endif
-endfunction
-
-function! s:ConfigEcho() abort
-  let echo_path = fnamemodify(s:third_part_path, ':h') . '/my_echo'
-  if empty(findfile(g:gcc_echo_local_server_filename, s:third_part_path))
-    call system('touch ' . s:third_part_path . '/' . g:gcc_echo_local_server_filename)
-  endif
-  let save_cwd = getcwd()
-  call chdir(echo_path)
-  if isdirectory(echo_path) 
-        \ && (empty(findfile('client', echo_path)) 
-        \ || empty(findfile('server', echo_path)))
-    call system('make')
-  endif
-  if isdirectory(echo_path) 
-        \ && !empty(findfile('server', echo_path))
-    call system('./server ' . g:gcc_echo_local_server_port
-          \ . ' ' . s:third_part_path . '/' . g:gcc_echo_local_server_filename . ' &')
-  endif
-  call chdir(save_cwd)
-  return echo_path
-endfunction
-
-let s:is_algorithm_update = 0
-let s:algorithm_list = {}
 let s:pairs = {
       \ '(': ')', 
       \ '\': '\', 
@@ -927,16 +653,13 @@ if !exists('g:gcc_keyboard_pick_list')
         \ '\', ';', ':', '''', '"', ',', '<', '.', '>', '/', '?', '`', '~', 
         \ '8', '*', '9', '(', '0', ')', '-', '_', '=', '+', ]
 endif
-let s:third_part_path = s:GetThirdPartPath()
+let s:plugin_path = s:GetPluginPath()
 let s:filetype_suffix = {
       \ 'c': 'c', 
       \ 'cpp': 'cpp', 
       \ 'java': 'java', 
       \ 'python': 'py', 
       \ }
-if !exists('g:gcc_exchange_algorithm_path')
-  let g:gcc_exchange_algorithm_path = '<F5>'
-endif
 if !exists('g:gcc_back_last_pos')
   let g:gcc_back_last_pos = '<F8>'
 endif
@@ -949,70 +672,22 @@ endif
 if !exists('g:gcc_release_key_board')
   let g:gcc_release_key_board = '<F7>'
 endif
-if !exists('g:gcc_search_algorithm')
-  let g:gcc_search_algorithm = '<F1>'
-endif
-if !exists('g:gcc_rename_algorithm')
-  let g:gcc_rename_algorithm = '<F2>'
-endif
-if !exists('g:gcc_remove_algorithm')
-  let g:gcc_remove_algorithm = '<F3>'
-endif
-if !exists('g:gcc_display_algorithm')
-  let g:gcc_display_algorithm = '<F4>'
-endif
 if !exists('g:gcc_comfirm_or_continue')
   let g:gcc_comfirm_or_continue = ':'
 endif
-if !exists('g:gcc_echo_local_server_port')
-  let g:gcc_echo_local_server_port = '9497'
-endif
-if !exists('g:gcc_echo_local_server_filename')
-  let g:gcc_echo_local_server_filename = 'tmp9497'
-endif
-if !exists('g:gcc_echo_remote_server_host')
-  let g:gcc_echo_remote_server_host = '127.0.0.1'
-endif
-if !exists('g:gcc_echo_remote_server_port')
-  let g:gcc_echo_remote_server_port = '9497'
-endif
-
-call s:UpdateAlgorithmList()
 
 augroup gen_algorithm
   autocmd!
   execute 'autocmd FileType ' . join(keys(s:filetype_suffix), ',') . 
-        \ ' noremap <silent> <Plug>gen_algorithmFindFile :<C-u>call <SID>BeginGetUserPrompt()<CR>i'
-  execute 'autocmd FileType ' . join(keys(s:filetype_suffix), ',') . 
-        \ ' noremap <silent> <Plug>gen_algorithmSearchAlgorithm :<C-u>call <SID>SearchAlgorithm()<CR>'
-  execute 'autocmd FileType ' . join(keys(s:filetype_suffix), ',') . 
-        \ ' noremap <silent> <Plug>gen_algorithmRemoveAlgorithm :<C-u>call <SID>RemoveAlgorithm()<CR>'
-  execute 'autocmd FileType ' . join(keys(s:filetype_suffix), ',') . 
-        \ ' noremap <silent> <Plug>gen_algorithmRenameAlgorithm :<C-u>call <SID>RenameAlgorithm()<CR>'
-  execute 'autocmd FileType ' . join(keys(s:filetype_suffix), ',') . 
-        \ ' noremap <silent> <Plug>gen_algorithmDisplayAlgorithm :<C-u>call <SID>DisplayAlgorithmList()<CR>'
+        \ ' noremap <silent> <Plug>gen_algorithm :<C-u>call <SID>BeginGetUserPrompt()<CR>i'
   execute 'autocmd FileType ' . join(keys(s:filetype_suffix), ',') . 
         \ ' noremap <silent> <Plug>gen_algorithmBackToLastPos :<C-u>call <SID>BackToLastPos()<CR>a'
-  execute 'autocmd FileType ' . join(keys(s:filetype_suffix), ',') . 
-        \ ' noremap <silent> <Plug>gen_algorithmExchangeAlgorithmPath :<C-u>call <SID>ExchangeAlgorithmPath()<CR>'
   execute 'autocmd FileType ' . join(keys(s:filetype_suffix), ',') . 
         \ ' noremap <silent> <Plug>gen_algorithmReleaseKeyBoard :<C-u>call <SID>ReleaseKeyBoard()<CR>'
   execute 'autocmd FileType ' . join(keys(s:filetype_suffix), ',') . 
         \ ' noremap <silent> <Plug>gen_algorithmPasteAlgorithm :<C-u>call <SID>PasteAlgorithm()<CR>'
 
   execute 'autocmd VimEnter,FileType ' . join(keys(s:filetype_suffix), ',') . 
-        \ ' nmap <silent> ' . g:gcc_search_algorithm . ' <Plug>gen_algorithmSearchAlgorithm'
-  execute 'autocmd VimEnter,FileType ' . join(keys(s:filetype_suffix), ',') . 
-        \ ' nmap <silent> ' . g:gcc_rename_algorithm . ' <Plug>gen_algorithmRenameAlgorithm'
-  execute 'autocmd VimEnter,FileType ' . join(keys(s:filetype_suffix), ',') . 
-        \ ' nmap <silent> ' . g:gcc_remove_algorithm . ' <Plug>gen_algorithmRemoveAlgorithm'
-  execute 'autocmd VimEnter,FileType ' . join(keys(s:filetype_suffix), ',') . 
-        \ ' nmap <silent> ' . g:gcc_display_algorithm . ' <Plug>gen_algorithmDisplayAlgorithm'
-  execute 'autocmd VimEnter,FileType ' . join(keys(s:filetype_suffix), ',') . 
-        \ ' nmap <silent> ' . g:gcc_exchange_algorithm_path . ' <Plug>gen_algorithmExchangeAlgorithmPath'
-  execute 'autocmd VimEnter,FileType ' . join(keys(s:filetype_suffix), ',') . 
-        \ ' nmap <silent> ' . g:gcc_find_file . ' <Plug>gen_algorithmFindFile'
+        \ ' nmap <silent> ' . g:gcc_find_file . ' <Plug>gen_algorithm'
 
-  execute 'autocmd VimEnter,FileType ' . join(keys(s:filetype_suffix), ',') . 
-        \ ' let s:my_echo_path = s:ConfigEcho()'
 augroup END

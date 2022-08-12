@@ -27,18 +27,9 @@ let g:gcc_keyboard_pick_list = [
       \ '1', '!', '2', '@', '3', '#', '4', '$', '5', '%', '6', '^', '7', '&', 
       \ '\', ';', ':', '''', '"', ',', '<', '.', '>', '/', '?', '`', '~', 
       \ '8', '*', '9', '(', '0', ')', '-', '_', '=', '+', ]
-let g:gcc_search_algorithm = '<Leader>1'
-let g:gcc_rename_algorithm = '<Leader>2'
-let g:gcc_remove_algorithm = '<Leader>3'
-let g:gcc_display_algorithm = '<Leader>4'
-let g:gcc_exchange_algorithm_path = '<Leader>5'
-let g:gcc_find_file = '<Leader>6'
+let g:gcc_comfirm_or_continue = '$'
+let g:gcc_find_file = '<Leader>4'
 let g:gcc_release_key_board = '<Leader>7'
 let g:gcc_back_last_pos = '<Leader>8'
 let g:gcc_paste_algorithm = '<Leader>9'
-let g:gcc_comfirm_or_continue = '$'
-let g:gcc_echo_local_server_port = '9497'
-let g:gcc_echo_local_server_filename = 'tmp9497'
-let g:gcc_echo_remote_server_host = '127.0.0.1'
-let g:gcc_echo_remote_server_port = '9497'
 ```
